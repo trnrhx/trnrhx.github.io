@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TRNRHX | TERMINAL ACCESS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turner Hicks (TRNRHX) | AI Trainer &amp; Builder</title>
+    <meta name="description" content="Personal site of Turner Hicks (TRNRHX), AI trainer and builder: self-hosted AI agents, automation, and web projects.">
+    <link rel="canonical" href="https://trnrhx.com/">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trnrhx.com/">
+    <meta property="og:title" content="TRNRHX | Turner Hicks">
+    <meta property="og:description" content="AI trainer and builder: self-hosted AI agents, automation, and web projects.">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%230a0a0a'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='%2300ff00' font-family='monospace'%3E%26gt;_%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -19,6 +28,7 @@
             font-family: 'VT323', monospace;
             margin: 0;
             height: 100vh;
+            height: 100dvh; /* dvh avoids mobile address-bar overflow; vh is the fallback */
             overflow: hidden;
             font-size: 1.25rem;
         }
@@ -104,9 +114,47 @@
             80% { clip: rect(70px, 9999px, 20px, 0); }
             100% { clip: rect(30px, 9999px, 10px, 0); }
         }
+
+        /* Visually hidden, but readable by crawlers and screen readers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .glitch::before, .glitch::after { display: none; }
+            .cursor, .animate-pulse { animation: none !important; }
+        }
     </style>
 </head>
-<body class="overflow-hidden bg-black" onclick="document.getElementById('command-input').focus()">
+<body class="overflow-hidden bg-black">
+
+    <!-- Static content for search engines and screen readers (visually hidden) -->
+    <section class="sr-only" aria-label="About this site">
+        <h2>Turner Hicks (TRNRHX)</h2>
+        <p>AI trainer and builder (independent contractor), found at the intersection of engineering, design, tech and humanity. This site is an interactive terminal: type help, about, projects or contact.</p>
+        <h3>Projects</h3>
+        <ul>
+            <li><a href="/projects/ai_stack.html" tabindex="-1">AI_STACK</a>: self-hosted AI automation and workflow stack integrating n8n, Dify, PostgreSQL, NocoDB, Ollama, OpenClaw, Docling, SeaweedFS and Caddy.</li>
+            <li><a href="/projects/iris_agent.html" tabindex="-1">IRIS_AGENT</a>: AI agent specializing in system maintenance, automation and self-improvement.</li>
+            <li><a href="/projects/apollo_agent.html" tabindex="-1">APOLLO_AGENT</a>: portable, hardware-based AI agent with advanced TTS/STT capabilities.</li>
+            <li><a href="/projects/glowing_horizon.html" tabindex="-1">GLOWING_HORIZON</a>: real-time, web-based map visualization of worldwide data streams.</li>
+            <li><a href="/projects/neon_hacker/index.html" tabindex="-1">NEON_HACKER</a>: browser-based retro FPS with a cyberpunk horror theme.</li>
+        </ul>
+        <h3>Contact</h3>
+        <ul>
+            <li><a href="mailto:turnerhicks@gmail.com" tabindex="-1">turnerhicks@gmail.com</a></li>
+            <li><a href="https://github.com/trnrhx" rel="noopener" tabindex="-1">GitHub: github.com/trnrhx</a></li>
+            <li><a href="https://www.linkedin.com/in/turner-hicks-65359053/" rel="noopener" tabindex="-1">LinkedIn</a></li>
+        </ul>
+    </section>
 
     <!-- Main Container -->
     <div class="relative z-10 h-full p-4 md:p-8 flex flex-col w-full">
@@ -124,22 +172,23 @@
         </header>
 
         <!-- Terminal Output Area -->
-        <div id="terminal-output" class="flex-grow overflow-y-auto mb-4 font-bold whitespace-pre-wrap leading-relaxed"></div>
+        <div id="terminal-output" role="log" aria-live="polite" aria-label="Terminal output" class="flex-grow overflow-y-auto mb-4 font-bold whitespace-pre-wrap leading-relaxed"></div>
 
         <!-- Input Line -->
         <div class="flex items-center bg-black bg-opacity-80 p-2 border border-green-900 rounded">
             <span class="mr-2 text-green-400">root@trnrhx:~$</span>
             <div class="relative flex-grow">
-                <input type="text" id="command-input" class="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+                <input type="text" id="command-input" class="cmd-input" aria-label="Terminal command" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
                 <span id="cursor-visual" class="cursor absolute top-1 left-0"></span>
             </div>
         </div>
         
-        <!-- Mobile Keyboard Helper -->
+        <!-- Quick command buttons (mobile only) -->
         <div class="md:hidden mt-2 flex gap-2 overflow-x-auto pb-2 text-sm">
             <button onclick="runCmd('help')" class="border border-green-800 px-3 py-1 hover:bg-green-900">HELP</button>
             <button onclick="runCmd('projects')" class="border border-green-800 px-3 py-1 hover:bg-green-900">PROJECTS</button>
             <button onclick="runCmd('about')" class="border border-green-800 px-3 py-1 hover:bg-green-900">ABOUT</button>
+            <button onclick="runCmd('contact')" class="border border-green-800 px-3 py-1 hover:bg-green-900">CONTACT</button>
             <button onclick="runCmd('clear')" class="border border-green-800 px-3 py-1 hover:bg-green-900">CLS</button>
         </div>
     </div>
@@ -160,6 +209,55 @@
         
         let history = [];
         let historyIndex = -1;
+
+        // --- Helpers ---
+        const mq = (q) => !!(window.matchMedia && window.matchMedia(q).matches);
+        const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+        const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        // --- Output engine: prints line by line, one command at a time ---
+        const LINE_DELAY = 40;   // ms between lines...
+        const LINE_JITTER = 30;  // ...plus up to this much random variation, for a less mechanical feel
+        let queue = Promise.resolve();
+        let pending = 0;         // queued or running tasks
+        let skipping = false;    // true => print whatever is left instantly
+
+        const instant = () => skipping; // not tied to prefers-reduced-motion: printing text isn't motion
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));          // always a real delay
+        const wait = (ms) => (instant() ? Promise.resolve() : sleep(ms));    // skippable delay
+
+        function enqueue(task) {
+            pending++;
+            queue = queue
+                .then(task)
+                .catch((err) => console.error(err))
+                .then(() => { pending--; if (!pending) skipping = false; });
+            return queue;
+        }
+
+        // Entering a command while output is still printing fast-forwards it, then runs the new command.
+        function runCmd(cmdString) {
+            if (pending > 0) skipping = true;
+            return enqueue(() => execCmd(cmdString));
+        }
+
+        // Prints text one line at a time into a single block. A line reading "@pause 450" waits 450 ms.
+        async function streamOutput(text, className = '') {
+            const div = document.createElement('div');
+            div.className = `mb-1 ${className}`;
+            div.setAttribute('aria-busy', 'true'); // screen readers wait for the full block
+            output.appendChild(div);
+            const lines = text.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                const pause = /^@pause (\d+)$/.exec(lines[i]);
+                if (pause) { await wait(Number(pause[1])); continue; }
+                const last = i === lines.length - 1;
+                div.insertAdjacentHTML('beforeend', lines[i] + (last ? '' : '\n'));
+                output.scrollTop = output.scrollHeight;
+                if (!last && lines[i].trim()) await wait(LINE_DELAY + Math.random() * LINE_JITTER);
+            }
+            div.removeAttribute('aria-busy');
+        }
 
         const fileSystem = {
             'about.txt': `
@@ -184,7 +282,7 @@ SIGNAL: [ENCRYPTED]`,
         const commands = {
             'help': {
                 desc: 'List available commands',
-                action: () => printOutput(`
+                action: () => streamOutput(`
 AVAILABLE COMMANDS:
   <span class="text-white">help</span>      - Display this menu
   <span class="text-white">about</span>     - Display operator identity
@@ -199,15 +297,15 @@ AVAILABLE COMMANDS:
             },
             'about': {
                 desc: 'User info',
-                action: () => typeText(fileSystem['about.txt'])
+                action: () => streamOutput(fileSystem['about.txt'])
             },
             'whoami': {
                 desc: 'Alias for about',
-                action: () => typeText(fileSystem['about.txt'])
+                action: () => streamOutput(fileSystem['about.txt'])
             },
             'contact': {
                 desc: 'Contact info',
-                action: () => printOutput(fileSystem['contact.txt'])
+                action: () => streamOutput(fileSystem['contact.txt'])
             },
             'ls': {
                 desc: 'List files',
@@ -217,8 +315,8 @@ AVAILABLE COMMANDS:
                 desc: 'Read file',
                 action: (args) => {
                     if (!args) return printOutput("Usage: cat [filename]", "text-red-500");
-                    if (fileSystem[args]) return printOutput(fileSystem[args]);
-                    return printOutput(`File not found: ${args}`, "text-red-500");
+                    if (has(fileSystem, args)) return streamOutput(fileSystem[args]);
+                    return printOutput(`File not found: ${esc(args)}`, "text-red-500");
                 }
             },
             'clear': {
@@ -232,28 +330,29 @@ AVAILABLE COMMANDS:
             'projects': {
                 desc: 'List projects',
                 action: () => {
-                    printOutput(`
+                    return streamOutput(`
 LOADING PROJECT DATABASE...
 ---------------------------
-1. <a class="text-white" href="https://trnrhx.com/projects/ai_stack.html" target="_blank" rel="noopener">AI_STACK</a>   [ AI Resarch & Development]
+@pause 450
+1. <a class="text-white" href="/projects/ai_stack.html" target="_blank" rel="noopener">AI_STACK</a>   [ AI Research & Development]
    > Self hosted AI automation and workflow stack integrating n8n, Dify, PostgreSQL, NocoDB, Ollama, OpenClaw, Docling, SeaweedFS, and Caddy. 
    > Managed by iris_agent. 
    > Status: TESTING
 
-2. <a class="text-white" href="https://www.trnrhx.com/projects/iris_agent.html" target="_blank" rel="noopener">IRIS_AGENT</a>   [ AI Agent ]
+2. <a class="text-white" href="/projects/iris_agent.html" target="_blank" rel="noopener">IRIS_AGENT</a>   [ AI Agent ]
    > AI Agent specializing in system maintenance, automation, and self-improvement. 
    > Oversees AI-stack operations and optimizes workflows.
    > Status: OPERATIONAL
 
-3. <a class="text-white" href="https://www.trnrhx.com/projects/apollo_agent.html" target="_blank" rel="noopener">APOLLO_AGENT</a>   [ AI Agent ]
+3. <a class="text-white" href="/projects/apollo_agent.html" target="_blank" rel="noopener">APOLLO_AGENT</a>   [ AI Agent ]
    > Portable, hardware based AI agent with advanced TTS/STT capabilities.
    > Status: PLANNING
 
-4. <a class="text-white" href="https://trnrhx.com/projects/glowing_horizon.html" target="_blank" rel="noopener">GLOWING_HORIZON</a>   [ Total Global Situational Awareness ]
+4. <a class="text-white" href="/projects/glowing_horizon.html" target="_blank" rel="noopener">GLOWING_HORIZON</a>   [ Total Global Situational Awareness ]
    > Real time, web-based map visualization of worldwide data streams
    > Status: DEVELOPMENT
 
-5. <a class="text-white" href="https://www.trnrhx.com/projects/neon_hacker/index.html" target="_blank" rel="noopener">NEON_HACKER</a>   [ 3D Web Game ]
+5. <a class="text-white" href="/projects/neon_hacker/index.html" target="_blank" rel="noopener">NEON_HACKER</a>   [ 3D Web Game ]
    > Browser-based retro FPS with cyberpunk horror theme
    > Status: PROTOTYPE
 
@@ -272,15 +371,21 @@ LOADING PROJECT DATABASE...
                     printOutput(`System theme updated to ${args || 'green'}.`);
                 }
             },
+            'neofetch': {
+                desc: 'System info (hidden easter egg, not listed in help)',
+                action: () => neofetch()
+            },
+            'fastfetch': {
+                desc: 'Alias for neofetch (hidden)',
+                action: () => neofetch()
+            },
             'sudo': {
                 desc: 'Admin',
                 action: () => printOutput("USER IS NOT IN THE SUDOERS FILE. THIS INCIDENT WILL BE REPORTED.", "text-red-500")
             },
             'hack': {
                 desc: 'Simulation',
-                action: () => {
-                    const target = document.getElementById('terminal-output');
-                    let i = 0;
+                action: async () => {
                     const steps = [
                         "Initializing brute force attack...",
                         "Bypassing firewall...",
@@ -290,17 +395,85 @@ LOADING PROJECT DATABASE...
                         "Covering tracks...",
                         "HACK COMPLETE. 0.0069BTC transferred to wallet."
                     ];
-                    const interval = setInterval(() => {
-                        if (i >= steps.length) clearInterval(interval);
-                        else {
-                            printOutput(`[${Math.random().toFixed(4)}] ${steps[i]}`, "text-yellow-500");
-                            i++;
-                            target.scrollTop = target.scrollHeight;
-                        }
-                    }, 800);
+                    for (const step of steps) {
+                        await wait(800);
+                        printOutput(`[${Math.random().toFixed(4)}] ${step}`, "text-yellow-500");
+                    }
                 }
             }
         };
+
+        // --- Easter egg: neofetch (intentionally not listed in `help`) ---
+        function neofetch() {
+            const logo = [
+                "<span class='text-fuchsia-500'>         /\\         </span>",
+                "<span class='text-purple-500'>      __/__\\__      </span>",
+                "<span class='text-indigo-500'>    / \\_    _/ \\    </span>",
+                "<span class='text-blue-500'>   / /  \\  /  \\ \\   </span>",
+                "<span class='text-cyan-500'>  / /    \\/    \\ \\  </span>",
+                "<span class='text-teal-400'> | |   _ /\\ _   | | </span>",
+                "<span class='text-emerald-400'> | |  / \\\\// \\  | | </span>",
+                "<span class='text-green-400'> | | |   &gt;&lt;   | | | </span>",
+                "<span class='text-lime-400'> | |  \\ //\\\\ /  | | </span>",
+                "<span class='text-yellow-400'> | |   ~ \\/ ~   | | </span>",
+                "<span class='text-amber-400'>  \\ \\    /\\    / /  </span>",
+                "<span class='text-orange-400'>   \\ \\  /  \\  / /   </span>",
+                "<span class='text-red-400'>    \\_\\~    ~/_/    </span>",
+                "<span class='text-rose-500'>      ~~\\  /~~      </span>",
+                "<span class='text-pink-500'>         \\/         </span>",
+                "                    ",
+                "                    "
+            ];
+            const LOGO_W = 20;
+
+            const themes = { '#0f0': 'green', '#ffb000': 'amber', '#00ffff': 'cyan', '#ff0000': 'red' };
+            const color = document.documentElement.style.getPropertyValue('--color-primary').trim().toLowerCase();
+            const theme = themes[color] || 'green';
+
+            const total = Math.floor(performance.now() / 1000);   // time since the page loaded
+            const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+            const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+            const uptime = [h && plural(h, 'hour'), m && plural(m, 'min'), plural(s, 'sec')].filter(Boolean).join(', ');
+
+            const row = (k, v) => `${k}: <span class="text-white">${esc(v)}</span>`;
+            const swatch = (c) => `<span style="background:${c}">&nbsp;&nbsp;&nbsp;</span>`;
+            const info = [
+                '<span class="text-white">root</span>@<span class="text-white">trnrhx</span>',
+                '-----------',
+                row('OS', 'TRNRHX_OS v2.4.0 sparc64'),
+                row('Host', 'Sun Ultra 1 Model 140'),
+                row('Kernel', 'trnrhx-kernel 2.4.0'),
+                row('BIOS', 'v1.02 (11/15/95)'),
+                row('Uptime', uptime),
+                row('Projects', String(Object.keys(projectRoutes).length)),
+                row('Shell', 'trnrhx-sh'),
+                row('Resolution', `${window.innerWidth}x${window.innerHeight}`),
+                row('Terminal', 'trnrhx.com'),
+                row('Theme', theme),
+                row('CPU', 'UltraSPARC @ 143MHz'),
+                row('Memory', `${100 + Math.floor(Math.random() * 40)}MiB / 384MiB`),
+                '',
+                ['#444', '#c33', '#3c3', '#cc3', '#36c', '#c3c', '#3cc', '#ccc'].map(swatch).join(''),
+                ['#777', '#f55', '#5f5', '#ff5', '#58f', '#f5f', '#5ff', '#fff'].map(swatch).join('')
+            ];
+
+            // Logo hidden from screen readers (it's just ASCII art)
+            const art = (text) => `<span aria-hidden="true">${text}</span>`;
+            let lines;
+            if (window.innerWidth >= 768) {
+                // side by side, like the real thing
+                const rows = Math.max(logo.length, info.length);
+                lines = [];
+                for (let i = 0; i < rows; i++) {
+                    const left = art(i < logo.length ? logo[i] : ' '.repeat(LOGO_W));
+                    lines.push(`${left}   ${info[i] || ''}`.replace(/\s+$/, ''));
+                }
+            } else {
+                // narrow screens: logo on top, info underneath
+                lines = [...logo.map((l) => art(l)), '', ...info];
+            }
+            return streamOutput('\n' + lines.join('\n') + '\n', 'whitespace-pre overflow-x-auto');
+        }
 
         // --- Utils ---
         function printOutput(text, className = "") {
@@ -311,48 +484,36 @@ LOADING PROJECT DATABASE...
             output.scrollTop = output.scrollHeight;
         }
 
-        function typeText(text, speed = 20) {
-            const div = document.createElement('div');
-            div.className = "mb-1";
-            output.appendChild(div);
-            let i = 0;
-            const interval = setInterval(() => {
-                div.textContent += text.charAt(i);
-                output.scrollTop = output.scrollHeight;
-                i++;
-                if (i > text.length - 1) clearInterval(interval);
-            }, speed);
-        }
-
         const projectRoutes = {
-            'ai_stack': 'https://www.trnrhx.com/projects/ai_stack.html',
-            'iris_agent': 'https://www.trnrhx.com/projects/iris_agent.html',
-            'apollo_agent': 'https://www.trnrhx.com/projects/apollo_agent.html',
-            'glowing_horizon': 'https://trnrhx.com/projects/glowing_horizon.html',
-            'neon_hacker': 'https://www.trnrhx.com/projects/neon_hacker/index.html',
+            'ai_stack': '/projects/ai_stack.html',
+            'iris_agent': '/projects/iris_agent.html',
+            'apollo_agent': '/projects/apollo_agent.html',
+            'glowing_horizon': '/projects/glowing_horizon.html',
+            'neon_hacker': '/projects/neon_hacker/index.html',
         };
 
-        async function runCmd(cmdString) {
+        async function execCmd(cmdString) {
+            skipping = false; // each new command animates normally
             const parts = cmdString.trim().split(' ');
             const cmd = parts[0].toLowerCase();
             const args = parts[1];
 
             // Echo command
-            printOutput(`<span class="opacity-50">root@trnrhx:~$</span> ${cmdString}`);
+            printOutput(`<span class="opacity-50">root@trnrhx:~$</span> ${esc(cmdString)}`);
 
             if (cmd === '') return;
 
             // Intercept hidden project commands
-            if (projectRoutes[cmd]) {
+            if (has(projectRoutes, cmd)) {
                 printOutput(`Initiating secure connection to ${cmd}...`, "text-green-500");
                 window.open(projectRoutes[cmd], '_blank');
                 return;
             }
 
-            if (commands[cmd]) {
-                commands[cmd].action(args);
+            if (has(commands, cmd)) {
+                await commands[cmd].action(args);
             } else {
-                printOutput(`Command not found: ${cmd}. Type 'help' for list.`, "text-red-500");
+                printOutput(`Command not found: ${esc(cmd)}. Type 'help' for list.`, "text-red-500");
             }
         }
 
@@ -364,6 +525,8 @@ LOADING PROJECT DATABASE...
                     history.push(cmd);
                     historyIndex = history.length;
                     runCmd(cmd);
+                } else if (pending) {
+                    skipping = true; // empty Enter skips the animation
                 }
                 this.value = '';
             } else if (e.key === 'ArrowUp') {
@@ -391,12 +554,11 @@ LOADING PROJECT DATABASE...
 
         function updateCursor() {
             const text = input.value;
-            // Calculate width of text (rough approximation for monospace)
-            // For exact width we'd need a hidden span, but 0.6em usually works for monospace fonts
-            cursorVisual.style.left = `${text.length * 0.58}em`; 
+            // 1ch = advance width of "0" in the current monospace font, so this tracks the text exactly
+            cursorVisual.style.left = `${text.length}ch`; 
         }
 
-        // Boot Sequence
+        // Boot Sequence (original timing; queued so commands typed during boot wait their turn)
         window.onload = () => {
             const bootText = [
                "BIOS DATE 11/15/95 14:22:54 VER 1.02",
@@ -407,24 +569,30 @@ LOADING PROJECT DATABASE...
                 "Establishing network connection...",
                 "Secure shell active."
             ];
-            
-            let delay = 0;
-            bootText.forEach((line, index) => {
-                delay += Math.random() * 500 + 200;
-                setTimeout(() => {
+
+            enqueue(async () => {
+                for (const line of bootText) {
+                    await sleep(Math.random() * 500 + 200);
                     printOutput(line, "text-gray-500");
-                    if (index === bootText.length - 1) {
-                        setTimeout(() => {
-                            printOutput("<br>Welcome to TRNRHX Terminal.", "text-xl text-white font-bold");
-                            printOutput("Type <span class='text-white bg-green-900 px-1'>help</span> to see available commands.<br>");
-                        }, 500);
-                    }
-                }, delay);
+                }
+                await sleep(500);
+                printOutput("<br>Welcome to TRNRHX Terminal.", "text-xl text-white font-bold");
+                printOutput("AI trainer &amp; builder. Try <span class='text-white'>projects</span>, <span class='text-white'>about</span> or <span class='text-white'>contact</span><span class='md:hidden'>, or use the buttons below</span>.");
+                printOutput("Type <span class='text-white bg-green-900 px-1'>help</span> to see available commands.<br>");
             });
         };
 
-        // Force focus
-        document.addEventListener('click', () => input.focus());
+        // Keep focus on the prompt (desktop only, so phones don't get a surprise keyboard)
+        document.addEventListener('click', (e) => {
+            const finePointer = mq('(pointer: fine)');
+            if (e.target.closest('a')) return;            // let links behave normally
+            if (e.target.closest('button')) {             // quick-command buttons
+                if (finePointer) input.focus();
+                return;
+            }
+            if (window.getSelection().toString()) return; // don't break text selection / copying
+            if (finePointer) input.focus();
+        });
     </script>
 </body>
 </html>
