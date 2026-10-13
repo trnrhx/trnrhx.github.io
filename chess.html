@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wizard's Chess 3D — Gothic Cathedral</title>
+  <!-- Material Symbols & Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Cinzel:wght@600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+  
+  <style>
+    :root {
+      /* Material Design 3 Dark Theme Tokens */
+      --md-sys-color-surface: rgba(26, 24, 31, 0.82);
+      --md-sys-color-surface-container: rgba(38, 35, 46, 0.9);
+      --md-sys-color-on-surface: #E6E1E5;
+      --md-sys-color-on-surface-variant: #CAC4D0;
+      --md-sys-color-primary: #D0BCFF;
+      --md-sys-color-on-primary: #381E72;
+      --md-sys-color-secondary-container: #4A4458;
+      --md-sys-color-on-secondary-container: #E8DEF8;
+      --md-sys-color-error: #F2B8B5;
+      --md-sys-color-on-error: #601410;
+      --md-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0a0e;
+      font-family: 'Roboto', sans-serif;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Single-Level Material Design 3 Navigation Bar */
+    .md-top-bar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--md-sys-color-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 999px;
+      box-shadow: var(--md-elevation-2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      max-width: 96vw;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 1.02rem;
+      letter-spacing: 0.06em;
+      color: var(--md-sys-color-primary);
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Turn & Status Chip */
+    .status-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--md-sys-color-surface-container);
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .turn-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f4f1ea;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      transition: all 0.3s ease;
+    }
+
+    .turn-dot.black {
+      background: #231f2e;
+      border: 1.5px solid #a899ff;
+      box-shadow: 0 0 8px rgba(168, 153, 255, 0.6);
+    }
+
+    /* Material 3 Tonal & Icon Buttons */
+    .md-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 13px;
+      border-radius: 18px;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      font-family: 'Roboto', sans-serif;
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s cubic-bezier(0.2, 0, 0, 1), color 0.2s, transform 0.1s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+
+    .md-btn:hover {
+      background: rgba(208, 188, 255, 0.12);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .md-btn:active {
+      transform: scale(0.96);
+    }
+
+    .md-btn.active {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    /* Voice Listening Active Pulse */
+    .md-btn.listening {
+      background: var(--md-sys-color-error);
+      color: var(--md-sys-color-on-error);
+      animation: pulse-mic 1.6s infinite ease-in-out;
+    }
+
+    @keyframes pulse-mic {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(242, 184, 181, 0.55); }
+      50% { box-shadow: 0 0 0 8px rgba(242, 184, 181, 0); }
+    }
+
+    .md-btn-primary {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+
+    .md-btn-primary:hover {
+      background: #decffe;
+      color: var(--md-sys-color-on-primary);
+    }
+
+    .material-symbols-rounded {
+      font-size: 18px;
+    }
+
+    /* Subtle Bottom Graveyard / Captured HUD (Non-interactive) */
+    .hud-footer {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 16px;
+      pointer-events: none;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .capture-tray {
+      background: var(--md-sys-color-surface);
+      backdrop-filter: blur(12px);
+      padding: 6px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.8rem;
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 140px;
+      box-shadow: var(--md-elevation-2);
+    }
+
+    .capture-icons {
+      font-size: 1rem;
+      letter-spacing: 2px;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    /* Toast Notification for Check / Shatter / Voice Transcript */
+    #toast {
+      position: fixed;
+      top: 84px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      z-index: 10;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+      box-shadow: var(--md-elevation-2);
+      white-space: nowrap;
+    }
+
+    #toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+
+  <!-- Import Map for Three.js & Chess.js -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "chess.js": "https://unpkg.com/chess.js@1.0.0-beta.6/dist/esm/chess.js"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Single-Level Material Design Navigation Bar -->
+  <header class="md-top-bar" role="toolbar" aria-label="Game Controls">
+    <div class="brand-title">
+      <span class="material-symbols-rounded">castle</span>
+      Wizard's Chess
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="status-chip" id="status-chip">
+      <span class="turn-dot" id="turn-dot"></span>
+      <span id="status-text">Marble's Turn</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="md-btn active" id="btn-mode-ai" title="Toggle AI Opponent">
+      <span class="material-symbols-rounded">smart_toy</span>
+      <span id="mode-label">vs. Obsidian AI</span>
+    </button>
+
+    <button class="md-btn" id="btn-cam-white" title="Marble Perspective">
+      <span class="material-symbols-rounded">south</span>
+      Marble
+    </button>
+
+    <button class="md-btn" id="btn-cam-black" title="Obsidian Perspective">
+      <span class="material-symbols-rounded">north</span>
+      Obsidian
+    </button>
+
+    <button class="md-btn" id="btn-cam-top" title="Cathedral Vault Overhead View">
+      <span class="material-symbols-rounded">grid_view</span>
+      Overhead
+    </button>
+
+    <button class="md-btn active" id="btn-audio" title="Toggle Cathedral Audio FX">
+      <span class="material-symbols-rounded" id="audio-icon">volume_up</span>
+      <span id="audio-label">SFX On</span>
+    </button>
+
+    <button class="md-btn" id="btn-voice" title="Speak Moves (e.g., 'Knight to F3', 'Pawn to E4')">
+      <span class="material-symbols-rounded" id="voice-icon">mic_off</span>
+      <span id="voice-label">Voice Off</span>
+    </button>
+
+    <div class="divider"></div>
+
+    <button class="md-btn md-btn-primary" id="btn-reset" title="Reset Board">
+      <span class="material-symbols-rounded">refresh</span>
+      New Game
+    </button>
+  </header>
+
+  <div id="toast">Check!</div>
+
+  <!-- Non-interactive Status Tray for Shattered Pieces -->
+  <footer class="hud-footer">
+    <div class="capture-tray">
+      <span>Shattered Obsidian:</span>
+      <span class="capture-icons" id="captured-b">—</span>
+    </div>
+    <div class="capture-tray">
+      <span>Shattered Marble:</span>
+      <span class="capture-icons" id="captured-w">—</span>
+    </div>
+  </footer>
+
+  <div id="canvas-container"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { Chess } from 'chess.js';
+
+    // ==========================================
+    // 1. PROCEDURAL WEB AUDIO ENGINE (CATHEDRAL SFX)
+    // ==========================================
+    class CathedralAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.masterGain = null;
+        this.reverbNode = null;
+        this.noiseBuffer = null;
+      }
+
+      init() {
+        if (this.ctx) {
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+          return;
+        }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+
+        const compressor = this.ctx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
+        compressor.ratio.setValueAtTime(4, this.ctx.currentTime);
+        compressor.connect(this.ctx.destination);
+
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.85;
+        this.masterGain.connect(compressor);
+
+        // Cathedral Convolution Reverb (2.4s stone hall impulse response)
+        this.reverbNode = this.ctx.createConvolver();
+        this.reverbNode.buffer = this._createCathedralImpulse(2.4, 2.8);
+        const reverbGain = this.ctx.createGain();
+        reverbGain.gain.value = 0.42;
+        this.reverbNode.connect(reverbGain);
+        reverbGain.connect(this.masterGain);
+
+        this.noiseBuffer = this._createStoneNoiseBuffer(3.0);
+      }
+
+      _createCathedralImpulse(duration, decay) {
+        const rate = this.ctx.sampleRate;
+        const length = rate * duration;
+        const impulse = this.ctx.createBuffer(2, length, rate);
+        for (let ch = 0; ch < 2; ch++) {
+          const data = impulse.getChannelData(ch);
+          for (let i = 0; i < length; i++) {
+            const env = Math.pow(1 - i / length, decay);
+            data[i] = (Math.random() * 2 - 1) * env * 0.6;
+          }
+        }
+        return impulse;
+      }
+
+      _createStoneNoiseBuffer(duration) {
+        const rate = this.ctx.sampleRate;
+        const length = rate * duration;
+        const buffer = this.ctx.createBuffer(1, length, rate);
+        const data = buffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < length; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99765 * b0 + white * 0.0990460;
+          b1 = 0.96300 * b1 + white * 0.2965164;
+          b2 = 0.57000 * b2 + white * 0.0526913;
+          data[i] = (b0 + b1 + b2 + white * 0.1848) * 0.15;
+        }
+        return buffer;
+      }
+
+      _connectWithReverb(node, wetAmount = 0.5) {
+        node.connect(this.masterGain);
+        if (this.reverbNode && wetAmount > 0) {
+          const send = this.ctx.createGain();
+          send.gain.value = wetAmount;
+          node.connect(send);
+          send.connect(this.reverbNode);
+        }
+      }
+
+      playSelect(color = 'w') {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const baseFreq = color === 'w' ? 420 : 680;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.35, now + 0.065);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+        osc.connect(gain);
+        this._connectWithReverb(gain, 0.35);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      }
+
+      // Arcane harmonic chime when a spoken voice command is recognized
+      playVoiceChime() {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 arcane triad
+        notes.forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.045);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.setValueAtTime(0.14, now + i * 0.045);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.045 + 0.45);
+
+          osc.connect(gain);
+          this._connectWithReverb(gain, 0.75);
+          osc.start(now + i * 0.045);
+          osc.stop(now + i * 0.045 + 0.48);
+        });
+      }
+
+      playStoneSlide(duration = 0.48, color = 'w') {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        noise.loop = true;
+
+        const lowBand = this.ctx.createBiquadFilter();
+        lowBand.type = 'bandpass';
+        lowBand.frequency.setValueAtTime(color === 'w' ? 145 : 185, now);
+        lowBand.frequency.linearRampToValueAtTime(color === 'w' ? 210 : 260, now + duration * 0.7);
+        lowBand.Q.value = 2.4;
+
+        const gritBand = this.ctx.createBiquadFilter();
+        gritBand.type = 'bandpass';
+        gritBand.frequency.setValueAtTime(color === 'w' ? 520 : 780, now);
+        gritBand.Q.value = 3.5;
+
+        const slideGain = this.ctx.createGain();
+        slideGain.gain.setValueAtTime(0.001, now);
+        slideGain.gain.linearRampToValueAtTime(0.42, now + 0.06);
+        slideGain.gain.setValueAtTime(0.38, now + duration - 0.08);
+        slideGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        noise.connect(lowBand);
+        noise.connect(gritBand);
+        lowBand.connect(slideGain);
+        gritBand.connect(slideGain);
+        this._connectWithReverb(slideGain, 0.55);
+
+        noise.start(now, Math.random() * 1.5);
+        noise.stop(now + duration + 0.02);
+
+        const settleTime = now + duration - 0.04;
+        const thudOsc = this.ctx.createOscillator();
+        const thudGain = this.ctx.createGain();
+        thudOsc.type = 'sine';
+        thudOsc.frequency.setValueAtTime(95, settleTime);
+        thudOsc.frequency.exponentialRampToValueAtTime(32, settleTime + 0.11);
+
+        thudGain.gain.setValueAtTime(0.001, now);
+        thudGain.gain.setValueAtTime(0.35, settleTime);
+        thudGain.gain.exponentialRampToValueAtTime(0.001, settleTime + 0.12);
+
+        thudOsc.connect(thudGain);
+        this._connectWithReverb(thudGain, 0.65);
+        thudOsc.start(settleTime);
+        thudOsc.stop(settleTime + 0.13);
+      }
+
+      playKnightLeap(duration = 0.48) {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const whoosh = this.ctx.createBufferSource();
+        whoosh.buffer = this.noiseBuffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.Q.value = 1.8;
+        filter.frequency.setValueAtTime(160, now);
+        filter.frequency.exponentialRampToValueAtTime(520, now + duration * 0.5);
+        filter.frequency.exponentialRampToValueAtTime(140, now + duration);
+
+        const whooshGain = this.ctx.createGain();
+        whooshGain.gain.setValueAtTime(0.01, now);
+        whooshGain.gain.linearRampToValueAtTime(0.28, now + duration * 0.45);
+        whooshGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        whoosh.connect(filter);
+        filter.connect(whooshGain);
+        this._connectWithReverb(whooshGain, 0.5);
+        whoosh.start(now);
+        whoosh.stop(now + duration);
+
+        const landTime = now + duration - 0.03;
+        const subOsc = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(125, landTime);
+        subOsc.frequency.exponentialRampToValueAtTime(26, landTime + 0.18);
+
+        subGain.gain.setValueAtTime(0.001, now);
+        subGain.gain.setValueAtTime(0.65, landTime);
+        subGain.gain.exponentialRampToValueAtTime(0.001, landTime + 0.20);
+
+        subOsc.connect(subGain);
+        this._connectWithReverb(subGain, 0.8);
+        subOsc.start(landTime);
+        subOsc.stop(landTime + 0.21);
+
+        const clickOsc = this.ctx.createOscillator();
+        const clickGain = this.ctx.createGain();
+        clickOsc.type = 'triangle';
+        clickOsc.frequency.setValueAtTime(340, landTime);
+        clickOsc.frequency.exponentialRampToValueAtTime(85, landTime + 0.05);
+
+        clickGain.gain.setValueAtTime(0.001, now);
+        clickGain.gain.setValueAtTime(0.3, landTime);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, landTime + 0.06);
+
+        clickOsc.connect(clickGain);
+        this._connectWithReverb(clickGain, 0.4);
+        clickOsc.start(landTime);
+        clickOsc.stop(landTime + 0.07);
+      }
+
+      playAttackWindup() {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(75, now);
+        osc.frequency.exponentialRampToValueAtTime(190, now + 0.35);
+
+        const lp = this.ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(320, now);
+
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.22, now + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+        osc.connect(lp);
+        lp.connect(gain);
+        this._connectWithReverb(gain, 0.6);
+        osc.start(now);
+        osc.stop(now + 0.44);
+      }
+
+      playShatter(victimColor = 'b') {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const isObsidian = victimColor === 'b';
+
+        const boomOsc = this.ctx.createOscillator();
+        const boomGain = this.ctx.createGain();
+        boomOsc.type = 'sine';
+        boomOsc.frequency.setValueAtTime(150, now);
+        boomOsc.frequency.exponentialRampToValueAtTime(22, now + 0.38);
+
+        boomGain.gain.setValueAtTime(0.85, now);
+        boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+        boomOsc.connect(boomGain);
+        this._connectWithReverb(boomGain, 0.85);
+        boomOsc.start(now);
+        boomOsc.stop(now + 0.44);
+
+        const crunch = this.ctx.createBufferSource();
+        crunch.buffer = this.noiseBuffer;
+
+        const crunchFilter = this.ctx.createBiquadFilter();
+        crunchFilter.type = 'bandpass';
+        crunchFilter.frequency.setValueAtTime(isObsidian ? 1850 : 920, now);
+        crunchFilter.Q.value = 1.2;
+
+        const crunchGain = this.ctx.createGain();
+        crunchGain.gain.setValueAtTime(0.75, now);
+        crunchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+
+        crunch.connect(crunchFilter);
+        crunchFilter.connect(crunchGain);
+        this._connectWithReverb(crunchGain, 0.75);
+        crunch.start(now, Math.random());
+        crunch.stop(now + 0.28);
+
+        const shardCount = 14;
+        for (let i = 0; i < shardCount; i++) {
+          const delay = 0.015 + Math.pow(Math.random(), 1.6) * 0.82;
+          const t = now + delay;
+          const shardDur = 0.035 + Math.random() * 0.055;
+
+          const shardOsc = this.ctx.createOscillator();
+          const shardGain = this.ctx.createGain();
+
+          const minF = isObsidian ? 1600 : 650;
+          const maxF = isObsidian ? 5200 : 2300;
+          const freq = minF + Math.random() * (maxF - minF);
+
+          shardOsc.type = isObsidian ? 'sine' : 'triangle';
+          shardOsc.frequency.setValueAtTime(freq, t);
+          shardOsc.frequency.exponentialRampToValueAtTime(freq * 0.62, t + shardDur);
+
+          const amp = (1 - delay / 0.95) * 0.22;
+          shardGain.gain.setValueAtTime(0.0001, now);
+          shardGain.gain.setValueAtTime(Math.max(0.02, amp), t);
+          shardGain.gain.exponentialRampToValueAtTime(0.0001, t + shardDur);
+
+          shardOsc.connect(shardGain);
+          this._connectWithReverb(shardGain, 0.65);
+          shardOsc.start(t);
+          shardOsc.stop(t + shardDur + 0.01);
+        }
+      }
+
+      playCathedralBell(isCheckmate = false) {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const partials = isCheckmate ? [220, 277.18, 329.63, 440] : [293.66, 440, 587.33];
+
+        partials.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+
+          const dur = isCheckmate ? 2.4 : 1.2;
+          gain.gain.setValueAtTime(0.16 / (idx + 1), now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+          osc.connect(gain);
+          this._connectWithReverb(gain, 0.9);
+          osc.start(now);
+          osc.stop(now + dur + 0.05);
+        });
+      }
+    }
+
+    const audioFX = new CathedralAudioEngine();
+
+    // ==========================================
+    // 2. STATE & CONFIGURATION
+    // ==========================================
+    const SQUARE_SIZE = 1.25;
+    const BOARD_OFFSET = (7 * SQUARE_SIZE) / 2;
+    const chess = new Chess();
+
+    let vsAI = true;
+    let isAnimating = false;
+    let selectedSquare = null;
+    let validMoves = [];
+
+    const pieceMeshes = new Map();
+    const squareMeshes = new Map();
+    const highlightMeshes = [];
+    const activeShards = [];
+    const activeParticles = [];
+    const torchLights = [];
+
+    // ==========================================
+    // 3. THREE.JS SCENE, CAMERA & RENDERER
+    // ==========================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0a0f);
+    scene.fog = new THREE.FogExp2(0x0b0a0f, 0.022);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 120);
+    camera.position.set(0, 9.5, 11.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxPolarAngle = Math.PI / 2 - 0.04;
+    controls.minDistance = 5;
+    controls.maxDistance = 26;
+    controls.target.set(0, 0.4, 0);
+
+    let cameraGoalPos = null;
+    let cameraGoalTarget = new THREE.Vector3(0, 0.4, 0);
+
+    function moveCameraTo(x, y, z) {
+      cameraGoalPos = new THREE.Vector3(x, y, z);
+    }
+
+    // ==========================================
+    // 4. MATERIALS (MARBLE, OBSIDIAN, CATHEDRAL)
+    // ==========================================
+    const marbleMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf3efe6,
+      roughness: 0.18,
+      metalness: 0.05,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.15,
+      reflectivity: 0.7
+    });
+
+    const obsidianMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x14121d,
+      roughness: 0.08,
+      metalness: 0.25,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.06,
+      emissive: 0x190e2e,
+      emissiveIntensity: 0.25
+    });
+
+    const whiteSquareMat = new THREE.MeshStandardMaterial({
+      color: 0xd8d2c5,
+      roughness: 0.35,
+      metalness: 0.05
+    });
+
+    const blackSquareMat = new THREE.MeshStandardMaterial({
+      color: 0x262330,
+      roughness: 0.22,
+      metalness: 0.15
+    });
+
+    const gothicStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x1d1b24,
+      roughness: 0.85,
+      metalness: 0.08
+    });
+
+    const gothicTrimMat = new THREE.MeshStandardMaterial({
+      color: 0x2c2836,
+      roughness: 0.6,
+      metalness: 0.2
+    });
+
+    // ==========================================
+    // 5. LIGHTING & GOTHIC CATHEDRAL ARCHITECTURE
+    // ==========================================
+    function buildCathedralAndLights() {
+      const ambientLight = new THREE.AmbientLight(0x403e5c, 0.9);
+      scene.add(ambientLight);
+
+      const moonLight = new THREE.DirectionalLight(0x9bb8ff, 2.2);
+      moonLight.position.set(12, 22, 10);
+      moonLight.castShadow = true;
+      moonLight.shadow.mapSize.width = 2048;
+      moonLight.shadow.mapSize.height = 2048;
+      moonLight.shadow.camera.near = 2;
+      moonLight.shadow.camera.far = 45;
+      const d = 9;
+      moonLight.shadow.camera.left = -d;
+      moonLight.shadow.camera.right = d;
+      moonLight.shadow.camera.top = d;
+      moonLight.shadow.camera.bottom = -d;
+      moonLight.shadow.bias = -0.0005;
+      scene.add(moonLight);
+
+      const floorGeo = new THREE.PlaneGeometry(80, 80);
+      const floorMat = new THREE.MeshStandardMaterial({
+        color: 0x111016,
+        roughness: 0.75,
+        metalness: 0.1
+      });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -0.6;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      const pedestal1 = new THREE.Mesh(new THREE.BoxGeometry(12.4, 0.35, 12.4), gothicStoneMat);
+      pedestal1.position.y = -0.42;
+      pedestal1.receiveShadow = true;
+      scene.add(pedestal1);
+
+      const pedestal2 = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.3, 11.0), gothicTrimMat);
+      pedestal2.position.y = -0.15;
+      pedestal2.receiveShadow = true;
+      pedestal2.castShadow = true;
+      scene.add(pedestal2);
+
+      const pillarPositions = [];
+      for (let z = -18; z <= 18; z += 9) {
+        pillarPositions.push([-11, z], [11, z]);
+      }
+
+      pillarPositions.forEach(([px, pz], idx) => {
+        const pillarGroup = new THREE.Group();
+        pillarGroup.position.set(px, -0.6, pz);
+
+        const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 2.2), gothicTrimMat);
+        plinth.position.y = 0.6;
+        pillarGroup.add(plinth);
+
+        const mainShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.85, 16, 12), gothicStoneMat);
+        mainShaft.position.y = 8.6;
+        mainShaft.castShadow = true;
+        mainShaft.receiveShadow = true;
+        pillarGroup.add(mainShaft);
+
+        for (let a = 0; a < 4; a++) {
+          const angle = (a * Math.PI) / 2;
+          const subShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.28, 16, 8), gothicTrimMat);
+          subShaft.position.set(Math.cos(angle) * 0.72, 8.6, Math.sin(angle) * 0.72);
+          pillarGroup.add(subShaft);
+        }
+
+        const capital = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 0.8, 1.0, 8), gothicTrimMat);
+        capital.position.y = 16.8;
+        pillarGroup.add(capital);
+
+        if (px < 0) {
+          const archCurve = new THREE.TorusGeometry(11, 0.35, 8, 32, Math.PI);
+          const archMesh = new THREE.Mesh(archCurve, gothicTrimMat);
+          archMesh.position.set(11, 17.2, 0);
+          pillarGroup.add(archMesh);
+        }
+
+        if (Math.abs(pz) <= 9) {
+          const sign = px < 0 ? 1 : -1;
+          const sconce = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 8), gothicTrimMat);
+          sconce.position.set(sign * 0.95, 4.2, 0);
+          sconce.rotation.z = sign * -0.25;
+          pillarGroup.add(sconce);
+
+          const flameGeo = new THREE.SphereGeometry(0.14, 8, 8);
+          const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa33 });
+          const flame = new THREE.Mesh(flameGeo, flameMat);
+          flame.position.set(sign * 1.02, 4.6, 0);
+          pillarGroup.add(flame);
+
+          const torch = new THREE.PointLight(0xff8c3b, 9, 19, 1.6);
+          torch.position.set(px + sign * 1.2, 4.2, pz);
+          torch.castShadow = false;
+          scene.add(torch);
+          torchLights.push({ light: torch, flame, baseIntensity: 9, phase: idx * 1.7 });
+        }
+
+        scene.add(pillarGroup);
+      });
+
+      const roseGroup = new THREE.Group();
+      roseGroup.position.set(0, 11, -24);
+      const roseRing = new THREE.Mesh(
+        new THREE.RingGeometry(3.8, 4.5, 24),
+        new THREE.MeshBasicMaterial({ color: 0x3b2d54, side: THREE.DoubleSide })
+      );
+      const roseGlow = new THREE.Mesh(
+        new THREE.CircleGeometry(3.8, 24),
+        new THREE.MeshBasicMaterial({ color: 0x251f47 })
+      );
+      roseGroup.add(roseRing, roseGlow);
+      scene.add(roseGroup);
+    }
+
+    // ==========================================
+    // 6. CHESSBOARD & COORDINATE HELPERS
+    // ==========================================
+    function squareToWorld(square) {
+      const file = square.charCodeAt(0) - 97;
+      const rank = parseInt(square[1], 10) - 1;
+      const x = file * SQUARE_SIZE - BOARD_OFFSET;
+      const z = (7 - rank) * SQUARE_SIZE - BOARD_OFFSET;
+      return new THREE.Vector3(x, 0, z);
+    }
+
+    function buildChessboard() {
+      const boardGroup = new THREE.Group();
+      const squareGeo = new THREE.BoxGeometry(SQUARE_SIZE, 0.2, SQUARE_SIZE);
+
+      const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+      for (let r = 0; r < 8; r++) {
+        for (let f = 0; f < 8; f++) {
+          const isLight = (r + f) % 2 === 1;
+          const squareName = `${files[f]}${r + 1}`;
+          const mesh = new THREE.Mesh(squareGeo, isLight ? whiteSquareMat : blackSquareMat);
+          const pos = squareToWorld(squareName);
+          mesh.position.set(pos.x, -0.1, pos.z);
+          mesh.receiveShadow = true;
+          mesh.userData = { square: squareName };
+          boardGroup.add(mesh);
+          squareMeshes.set(squareName, mesh);
+        }
+      }
+      scene.add(boardGroup);
+    }
+
+    // ==========================================
+    // 7. PROCEDURAL 3D WIZARD'S CHESS PIECES
+    // ==========================================
+    function createPieceGeometry(type, color) {
+      const mat = color === 'w' ? marbleMaterial : obsidianMaterial;
+      const group = new THREE.Group();
+
+      const basePoints = [
+        new THREE.Vector2(0, 0),
+        new THREE.Vector2(0.42, 0),
+        new THREE.Vector2(0.42, 0.08),
+        new THREE.Vector2(0.35, 0.14),
+        new THREE.Vector2(0.32, 0.22),
+        new THREE.Vector2(0.24, 0.28)
+      ];
+
+      if (type === 'p') {
+        const pts = [
+          ...basePoints,
+          new THREE.Vector2(0.16, 0.55),
+          new THREE.Vector2(0.24, 0.62),
+          new THREE.Vector2(0.14, 0.68),
+          new THREE.Vector2(0.20, 0.85),
+          new THREE.Vector2(0.12, 1.02),
+          new THREE.Vector2(0, 1.08)
+        ];
+        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), mat);
+        group.add(body);
+      } else if (type === 'r') {
+        const pts = [
+          ...basePoints,
+          new THREE.Vector2(0.26, 0.95),
+          new THREE.Vector2(0.34, 1.05),
+          new THREE.Vector2(0.34, 1.25),
+          new THREE.Vector2(0, 1.25)
+        ];
+        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 16), mat);
+        group.add(body);
+        for (let i = 0; i < 6; i++) {
+          const a = (i * Math.PI * 2) / 6;
+          const cren = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.12), mat);
+          cren.position.set(Math.cos(a) * 0.26, 1.31, Math.sin(a) * 0.26);
+          cren.rotation.y = -a;
+          group.add(cren);
+        }
+      } else if (type === 'n') {
+        const base = new THREE.Mesh(new THREE.LatheGeometry(basePoints, 20), mat);
+        group.add(base);
+
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 0.65, 12), mat);
+        torso.position.y = 0.58;
+        group.add(torso);
+
+        const head = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.58, 6), mat);
+        head.position.set(0, 1.05, 0.12);
+        head.rotation.x = Math.PI * 0.38;
+        group.add(head);
+
+        const mane = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.55, 0.18), mat);
+        mane.position.set(0, 0.95, -0.1);
+        mane.rotation.x = -0.2;
+        group.add(mane);
+
+        group.rotation.y = color === 'w' ? Math.PI : 0;
+      } else if (type === 'b') {
+        const pts = [
+          ...basePoints,
+          new THREE.Vector2(0.17, 0.82),
+          new THREE.Vector2(0.25, 0.88),
+          new THREE.Vector2(0.24, 1.15),
+          new THREE.Vector2(0.14, 1.38),
+          new THREE.Vector2(0.05, 1.48),
+          new THREE.Vector2(0, 1.54)
+        ];
+        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), mat);
+        group.add(body);
+        const orb = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 12), mat);
+        orb.position.y = 1.56;
+        group.add(orb);
+      } else if (type === 'q') {
+        const pts = [
+          ...basePoints,
+          new THREE.Vector2(0.16, 0.95),
+          new THREE.Vector2(0.28, 1.05),
+          new THREE.Vector2(0.18, 1.35),
+          new THREE.Vector2(0.30, 1.58),
+          new THREE.Vector2(0, 1.52)
+        ];
+        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 24), mat);
+        group.add(body);
+        for (let i = 0; i < 8; i++) {
+          const a = (i * Math.PI * 2) / 8;
+          const spike = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 6), mat);
+          spike.position.set(Math.cos(a) * 0.25, 1.66, Math.sin(a) * 0.25);
+          group.add(spike);
+        }
+      } else if (type === 'k') {
+        const pts = [
+          ...basePoints,
+          new THREE.Vector2(0.18, 1.02),
+          new THREE.Vector2(0.30, 1.12),
+          new THREE.Vector2(0.22, 1.45),
+          new THREE.Vector2(0.30, 1.65),
+          new THREE.Vector2(0, 1.65)
+        ];
+        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 24), mat);
+        group.add(body);
+
+        const vBar = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.30, 0.08), mat);
+        vBar.position.y = 1.80;
+        const hBar = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.08), mat);
+        hBar.position.y = 1.84;
+        group.add(vBar, hBar);
+      }
+
+      const staff = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.75, 0.05), mat);
+      staff.position.set(0.24, 0.55, 0.15);
+      staff.rotation.z = -0.12;
+      group.add(staff);
+
+      group.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+
+      return group;
+    }
+
+    function syncPiecesWithBoard() {
+      pieceMeshes.forEach((mesh) => scene.remove(mesh));
+      pieceMeshes.clear();
+
+      const board = chess.board();
+      for (let r = 0; r < 8; r++) {
+        for (let f = 0; f < 8; f++) {
+          const cell = board[r][f];
+          if (cell) {
+            const mesh = createPieceGeometry(cell.type, cell.color);
+            const pos = squareToWorld(cell.square);
+            mesh.position.copy(pos);
+            mesh.userData = {
+              square: cell.square,
+              type: cell.type,
+              color: cell.color,
+              baseY: 0,
+              baseRotY: mesh.rotation.y,
+              idlePhase: Math.random() * Math.PI * 2
+            };
+            scene.add(mesh);
+            pieceMeshes.set(cell.square, mesh);
+          }
+        }
+      }
+      updateUI();
+    }
+
+    // ==========================================
+    // 8. SHATTER & PARTICLE FX ENGINE
+    // ==========================================
+    function triggerShatter(worldPos, color) {
+      audioFX.playShatter(color);
+
+      const baseMat = color === 'w' ? marbleMaterial : obsidianMaterial;
+      const shardCount = 24;
+
+      for (let i = 0; i < shardCount; i++) {
+        const radius = 0.09 + Math.random() * 0.14;
+        const detail = Math.random() > 0.5 ? 0 : 1;
+        const geo = new THREE.DodecahedronGeometry(radius, detail);
+        geo.scale(
+          0.6 + Math.random() * 0.9,
+          0.5 + Math.random() * 1.1,
+          0.6 + Math.random() * 0.9
+        );
+
+        const shardMat = baseMat.clone();
+        shardMat.transparent = true;
+        shardMat.opacity = 1.0;
+
+        const shard = new THREE.Mesh(geo, shardMat);
+        shard.castShadow = true;
+        shard.position.set(
+          worldPos.x + (Math.random() - 0.5) * 0.4,
+          0.25 + Math.random() * 0.95,
+          worldPos.z + (Math.random() - 0.5) * 0.4
+        );
+
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.8 + Math.random() * 3.8;
+        const velocity = new THREE.Vector3(
+          Math.cos(angle) * speed,
+          2.2 + Math.random() * 3.5,
+          Math.sin(angle) * speed
+        );
+
+        const rotVel = new THREE.Vector3(
+          (Math.random() - 0.5) * 12,
+          (Math.random() - 0.5) * 12,
+          (Math.random() - 0.5) * 12
+        );
+
+        scene.add(shard);
+        activeShards.push({
+          mesh: shard,
+          velocity,
+          rotVel,
+          age: 0,
+          maxAge: 2.2 + Math.random() * 0.8
+        });
+      }
+
+      const flashLight = new THREE.PointLight(color === 'w' ? 0xffe6b3 : 0xa370ff, 12, 6);
+      flashLight.position.set(worldPos.x, 0.8, worldPos.z);
+      scene.add(flashLight);
+      setTimeout(() => scene.remove(flashLight), 180);
+    }
+
+    function spawnSlideDust(worldPos, color) {
+      const geo = new THREE.SphereGeometry(0.045, 6, 6);
+      const mat = new THREE.MeshBasicMaterial({
+        color: color === 'w' ? 0xe5dec9 : 0x8b6eff,
+        transparent: true,
+        opacity: 0.75
+      });
+      const p = new THREE.Mesh(geo, mat);
+      p.position.set(
+        worldPos.x + (Math.random() - 0.5) * 0.35,
+        0.05,
+        worldPos.z + (Math.random() - 0.5) * 0.35
+      );
+      scene.add(p);
+      activeParticles.push({ mesh: p, age: 0, maxAge: 0.55 });
+    }
+
+    // ==========================================
+    // 9. MOVE & ATTACK ANIMATION SEQUENCER
+    // ==========================================
+    function animateChessMove(moveObj, onComplete) {
+      isAnimating = true;
+      const attacker = pieceMeshes.get(moveObj.from);
+      const targetPos = squareToWorld(moveObj.to);
+      const startPos = attacker.position.clone();
+
+      let capturedSquare = moveObj.to;
+      if (moveObj.flags.includes('e')) {
+        const epRank = moveObj.color === 'w' ? '5' : '4';
+        capturedSquare = `${moveObj.to[0]}${epRank}`;
+      }
+      const victim = pieceMeshes.get(capturedSquare);
+      const isCapture = Boolean(victim);
+      const isKnight = moveObj.piece === 'n';
+
+      const duration = isCapture ? 0.68 : 0.48;
+      let elapsed = 0;
+      let shattered = false;
+
+      if (isCapture) {
+        audioFX.playAttackWindup(moveObj.color);
+        if (isKnight) {
+          audioFX.playKnightLeap(duration * 0.72);
+        } else {
+          audioFX.playStoneSlide(duration * 0.72, moveObj.color);
+        }
+      } else if (isKnight) {
+        audioFX.playKnightLeap(duration);
+      } else {
+        audioFX.playStoneSlide(duration, moveObj.color);
+      }
+
+      let rookMesh = null;
+      let rookStart = null;
+      let rookEnd = null;
+      if (moveObj.flags.includes('k') || moveObj.flags.includes('q')) {
+        const rank = moveObj.color === 'w' ? '1' : '8';
+        const rookFromFile = moveObj.flags.includes('k') ? 'h' : 'a';
+        const rookToFile = moveObj.flags.includes('k') ? 'f' : 'd';
+        const rFrom = `${rookFromFile}${rank}`;
+        const rTo = `${rookToFile}${rank}`;
+        rookMesh = pieceMeshes.get(rFrom);
+        if (rookMesh) {
+          rookStart = rookMesh.position.clone();
+          rookEnd = squareToWorld(rTo);
+          pieceMeshes.delete(rFrom);
+          pieceMeshes.set(rTo, rookMesh);
+          rookMesh.userData.square = rTo;
+        }
+      }
+
+      const clock = new THREE.Clock();
+
+      function step() {
+        const dt = clock.getDelta();
+        elapsed += dt;
+        const t = Math.min(elapsed / duration, 1);
+
+        if (isCapture) {
+          let moveFactor;
+          if (t < 0.25) {
+            const w = t / 0.25;
+            moveFactor = -0.12 * Math.sin(w * Math.PI * 0.5);
+            attacker.rotation.x = -0.28 * w;
+          } else if (t < 0.72) {
+            const s = (t - 0.25) / 0.47;
+            moveFactor = s * s * 0.88;
+            attacker.rotation.x = 0.42 * Math.sin(s * Math.PI);
+          } else {
+            const f = (t - 0.72) / 0.28;
+            moveFactor = 0.88 + 0.12 * f;
+            attacker.rotation.x = 0;
+          }
+
+          attacker.position.lerpVectors(startPos, targetPos, moveFactor);
+          if (isKnight) {
+            attacker.position.y = Math.sin(Math.max(0, moveFactor) * Math.PI) * 1.45;
+          } else if (Math.random() < 0.45) {
+            spawnSlideDust(attacker.position, moveObj.color);
+          }
+
+          if (t >= 0.65 && !shattered && victim) {
+            shattered = true;
+            triggerShatter(victim.position, victim.userData.color);
+            scene.remove(victim);
+            pieceMeshes.delete(capturedSquare);
+          }
+        } else {
+          const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          attacker.position.lerpVectors(startPos, targetPos, ease);
+          if (isKnight) {
+            attacker.position.y = Math.sin(ease * Math.PI) * 1.35;
+          } else if (Math.random() < 0.35) {
+            spawnSlideDust(attacker.position, moveObj.color);
+          }
+        }
+
+        if (rookMesh) {
+          rookMesh.position.lerpVectors(rookStart, rookEnd, t);
+        }
+
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          attacker.position.copy(targetPos);
+          attacker.rotation.x = 0;
+          pieceMeshes.delete(moveObj.from);
+
+          if (moveObj.flags.includes('p')) {
+            scene.remove(attacker);
+            const promoted = createPieceGeometry('q', moveObj.color);
+            promoted.position.copy(targetPos);
+            promoted.userData = {
+              square: moveObj.to,
+              type: 'q',
+              color: moveObj.color,
+              baseY: 0,
+              baseRotY: 0,
+              idlePhase: Math.random() * Math.PI * 2
+            };
+            scene.add(promoted);
+            pieceMeshes.set(moveObj.to, promoted);
+          } else {
+            attacker.userData.square = moveObj.to;
+            pieceMeshes.set(moveObj.to, attacker);
+          }
+
+          isAnimating = false;
+          onComplete();
+        }
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    // ==========================================
+    // 10. BOARD HIGHLIGHTS & INTERACTION
+    // ==========================================
+    function clearHighlights() {
+      highlightMeshes.forEach((m) => scene.remove(m));
+      highlightMeshes.length = 0;
+    }
+
+    function showHighlights(square, moves) {
+      clearHighlights();
+
+      const selPos = squareToWorld(square);
+      const selRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.42, 0.52, 28),
+        new THREE.MeshBasicMaterial({ color: 0xd0bcff, side: THREE.DoubleSide })
+      );
+      selRing.rotation.x = -Math.PI / 2;
+      selRing.position.set(selPos.x, 0.02, selPos.z);
+      scene.add(selRing);
+      highlightMeshes.push(selRing);
+
+      moves.forEach((m) => {
+        const pos = squareToWorld(m.to);
+        const isCapture = m.captured || m.flags.includes('e');
+        const geo = isCapture
+          ? new THREE.RingGeometry(0.38, 0.52, 24)
+          : new THREE.CircleGeometry(0.20, 20);
+        const mat = new THREE.MeshBasicMaterial({
+          color: isCapture ? 0xf2b8b5 : 0xd0bcff,
+          transparent: true,
+          opacity: 0.85,
+          side: THREE.DoubleSide
+        });
+        const marker = new THREE.Mesh(geo, mat);
+        marker.rotation.x = -Math.PI / 2;
+        marker.position.set(pos.x, 0.02, pos.z);
+        scene.add(marker);
+        highlightMeshes.push(marker);
+      });
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    window.addEventListener('pointerdown', (e) => {
+      if (isAnimating || chess.isGameOver()) return;
+      if (e.target.closest('.md-top-bar')) return;
+      if (vsAI && chess.turn() === 'b') return;
+
+      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+
+      const interactables = [...squareMeshes.values(), ...pieceMeshes.values()];
+      const hits = raycaster.intersectObjects(interactables, true);
+      if (hits.length === 0) {
+        selectedSquare = null;
+        clearHighlights();
+        return;
+      }
+
+      let obj = hits[0].object;
+      while (obj.parent && !obj.userData.square) {
+        obj = obj.parent;
+      }
+      const clickedSquare = obj.userData.square;
+      if (!clickedSquare) return;
+
+      const chosenMove = validMoves.find((m) => m.to === clickedSquare);
+      if (selectedSquare && chosenMove) {
+        executeMove(chosenMove);
+        return;
+      }
+
+      const pieceOnSquare = chess.get(clickedSquare);
+      if (pieceOnSquare && pieceOnSquare.color === chess.turn()) {
+        selectedSquare = clickedSquare;
+        validMoves = chess.moves({ square: clickedSquare, verbose: true });
+        audioFX.playSelect(pieceOnSquare.color);
+        showHighlights(clickedSquare, validMoves);
+      } else {
+        selectedSquare = null;
+        validMoves = [];
+        clearHighlights();
+      }
+    });
+
+    function executeMove(moveInput) {
+      clearHighlights();
+      selectedSquare = null;
+      validMoves = [];
+
+      const moveResult = chess.move({
+        from: moveInput.from,
+        to: moveInput.to,
+        promotion: 'q'
+      });
+
+      if (!moveResult) return;
+
+      animateChessMove(moveResult, () => {
+        updateUI();
+        if (!chess.isGameOver() && vsAI && chess.turn() === 'b') {
+          setTimeout(makeObsidianAIMove, 320);
+        }
+      });
+    }
+
+    // ==========================================
+    // 11. WEB SPEECH API VOICE COMMAND ENGINE
+    // ==========================================
+    function parseSpokenChessCommand(rawTranscript) {
+      if (isAnimating || chess.isGameOver()) return null;
+      if (vsAI && chess.turn() === 'b') return null;
+
+      let text = rawTranscript.toLowerCase().trim();
+      const legalMoves = chess.moves({ verbose: true });
+      if (legalMoves.length === 0) return null;
+
+      // 1. Check Castling Commands
+      if (text.includes('castle')) {
+        if (text.includes('queen') || text.includes('long')) {
+          return legalMoves.find((m) => m.san === 'O-O-O') || null;
+        }
+        return legalMoves.find((m) => m.san === 'O-O') || legalMoves.find((m) => m.san.startsWith('O-O')) || null;
+      }
+
+      // 2. Normalize common speech-to-text homophones for pieces, files, and ranks
+      const replacements = [
+        [/\b(night|nights|horse)\b/g, 'knight'],
+        [/\b(brook|rock|castle|tower)\b/g, 'rook'],
+        [/\b(pond|upon|porn)\b/g, 'pawn'],
+        [/\b(alpha)\b/g, 'a'],
+        [/\b(bravo|bee|be)\b/g, 'b'],
+        [/\b(charlie|see|sea)\b/g, 'c'],
+        [/\b(delta|dee)\b/g, 'd'],
+        [/\b(echo|he)\b/g, 'e'],
+        [/\b(foxtrot|ef)\b/g, 'f'],
+        [/\b(golf|gee)\b/g, 'g'],
+        [/\b(hotel|aitch|age)\b/g, 'h'],
+        [/\b(one|won)\b/g, '1'],
+        [/\b(two|too|to)\b/g, '2'],
+        [/\b(three|tree|free)\b/g, '3'],
+        [/\b(four|for|fore)\b/g, '4'],
+        [/\b(five)\b/g, '5'],
+        [/\b(six|sex)\b/g, '6'],
+        [/\b(seven)\b/g, '7'],
+        [/\b(eight|ate)\b/g, '8']
+      ];
+
+      // Preserve "to" as separator before converting isolated rank homophones
+      let normalized = text
+        .replace(/\b(knight|night|horse)\b/g, ' knight ')
+        .replace(/\b(bishop)\b/g, ' bishop ')
+        .replace(/\b(rook|brook|rock|tower)\b/g, ' rook ')
+        .replace(/\b(queen)\b/g, ' queen ')
+        .replace(/\b(king)\b/g, ' king ')
+        .replace(/\b(pawn|pond)\b/g, ' pawn ');
+
+      // Convert rank number words only when following a file letter or word
+      normalized = normalized
+        .replace(/\b(one|won)\b/g, '1')
+        .replace(/\b(three|tree)\b/g, '3')
+        .replace(/\b(four|for|fore)\b/g, '4')
+        .replace(/\b(five)\b/g, '5')
+        .replace(/\b(six)\b/g, '6')
+        .replace(/\b(seven)\b/g, '7')
+        .replace(/\b(eight|ate)\b/g, '8');
+
+      // Handle "two / too / to" carefully when preceded by a file letter a-h
+      normalized = normalized.replace(/\b([a-h]|bee|be|see|sea|dee|gee)\s+(two|too|to)\b/g, '$1 2');
+
+      // Normalize spoken file homophones right before a rank 1-8
+      normalized = normalized
+        .replace(/\b(bee|be)\s*([1-8])\b/g, 'b$2')
+        .replace(/\b(see|sea)\s*([1-8])\b/g, 'c$2')
+        .replace(/\b(dee)\s*([1-8])\b/g, 'd$2')
+        .replace(/\b(gee)\s*([1-8])\b/g, 'g$2')
+        .replace(/\b(aitch)\s*([1-8])\b/g, 'h$2');
+
+      // Collapse spaces between file [a-h] and rank [1-8] (e.g. "f 3" -> "f3")
+      normalized = normalized.replace(/\b([a-h])\s+([1-8])\b/g, '$1$2');
+
+      // Identify spoken piece type if mentioned
+      let pieceType = null;
+      if (normalized.includes('knight')) pieceType = 'n';
+      else if (normalized.includes('bishop')) pieceType = 'b';
+      else if (normalized.includes('rook')) pieceType = 'r';
+      else if (normalized.includes('queen')) pieceType = 'q';
+      else if (normalized.includes('king')) pieceType = 'k';
+      else if (normalized.includes('pawn')) pieceType = 'p';
+
+      const wantsCapture = /\b(takes|take|captures|capture|shatter|destroy|kills|x)\b/.test(normalized);
+
+      // Extract all algebraic squares mentioned (e.g., ['e2', 'e4'] or ['f3'])
+      const squaresFound = normalized.match(/\b[a-h][1-8]\b/g) || [];
+      if (squaresFound.length === 0) return null;
+
+      const targetSquare = squaresFound[squaresFound.length - 1];
+      const originSquare = squaresFound.length >= 2 ? squaresFound[0] : null;
+
+      // Filter legal moves matching target square
+      let candidates = legalMoves.filter((m) => m.to === targetSquare);
+      if (candidates.length === 0) return null;
+
+      if (originSquare) {
+        const fromMatch = candidates.filter((m) => m.from === originSquare);
+        if (fromMatch.length > 0) candidates = fromMatch;
+      }
+
+      if (pieceType) {
+        const pieceMatch = candidates.filter((m) => m.piece === pieceType);
+        if (pieceMatch.length > 0) candidates = pieceMatch;
+      }
+
+      if (wantsCapture) {
+        const capMatch = candidates.filter((m) => m.captured || m.flags.includes('e'));
+        if (capMatch.length > 0) candidates = capMatch;
+      }
+
+      return candidates[0] || null;
+    }
+
+    // Setup Web Speech API Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let voiceActive = false;
+
+    const btnVoice = document.getElementById('btn-voice');
+    const voiceIcon = document.getElementById('voice-icon');
+    const voiceLabel = document.getElementById('voice-label');
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const lastResult = event.results[event.results.length - 1];
+        if (!lastResult.isFinal) return;
+
+        const transcript = lastResult[0].transcript.trim();
+        const matchedMove = parseSpokenChessCommand(transcript);
+
+        if (matchedMove) {
+          audioFX.playVoiceChime();
+          const pieceNames = { p: 'Pawn', n: 'Knight', b: 'Bishop', r: 'Rook', q: 'Queen', k: 'King' };
+          showToast(`"${transcript}" → ${pieceNames[matchedMove.piece]} to ${matchedMove.to.toUpperCase()}`);
+          executeMove(matchedMove);
+        } else {
+          showToast(`Unrecognized Move: "${transcript}"`);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          voiceActive = false;
+          updateVoiceButtonUI();
+          showToast('Microphone Permission Denied');
+        }
+      };
+
+      recognition.onend = () => {
+        // Keep listening continuously while voice mode is toggled on
+        if (voiceActive) {
+          try {
+            recognition.start();
+          } catch (_) {}
+        }
+      };
+    } else {
+      btnVoice.title = 'Web Speech API not supported in this browser';
+      btnVoice.style.opacity = '0.5';
+    }
+
+    function updateVoiceButtonUI() {
+      btnVoice.classList.toggle('listening', voiceActive);
+      voiceIcon.textContent = voiceActive ? 'mic' : 'mic_off';
+      voiceLabel.textContent = voiceActive ? 'Listening…' : 'Voice Off';
+    }
+
+    btnVoice.addEventListener('click', () => {
+      if (!recognition) {
+        showToast('Speech Recognition requires Chrome or Edge');
+        return;
+      }
+      voiceActive = !voiceActive;
+      updateVoiceButtonUI();
+
+      if (voiceActive) {
+        audioFX.playVoiceChime();
+        try {
+          recognition.start();
+          showToast('Speak a move: e.g. "Knight to F3"');
+        } catch (_) {}
+      } else {
+        audioFX.playSelect('b');
+        try {
+          recognition.stop();
+        } catch (_) {}
+        showToast('Voice Commands Muted');
+      }
+    });
+
+    // ==========================================
+    // 12. OBSIDIAN AI OPPONENT (MATERIAL HEURISTIC)
+    // ==========================================
+    const PIECE_VALUES = { p: 10, n: 32, b: 33, r: 50, q: 90, k: 900 };
+
+    function makeObsidianAIMove() {
+      if (chess.isGameOver()) return;
+      const moves = chess.moves({ verbose: true });
+      if (moves.length === 0) return;
+
+      let bestMove = moves[0];
+      let bestScore = -Infinity;
+
+      for (const m of moves) {
+        let score = (Math.random() - 0.5) * 4;
+        if (m.captured) {
+          score += PIECE_VALUES[m.captured] * 1.4 - PIECE_VALUES[m.piece] * 0.15;
+        }
+        if (m.san.includes('+')) score += 12;
+        if (['d4', 'd5', 'e4', 'e5'].includes(m.to)) score += 4;
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = m;
+        }
+      }
+
+      executeMove(bestMove);
+    }
+
+    // ==========================================
+    // 13. UI & HUD UPDATES
+    // ==========================================
+    const turnDot = document.getElementById('turn-dot');
+    const statusText = document.getElementById('status-text');
+    const toastEl = document.getElementById('toast');
+    const capturedWEl = document.getElementById('captured-w');
+    const capturedBEl = document.getElementById('captured-b');
+
+    const UNICODE_PIECES = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
+    let toastTimer = null;
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('visible');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 2500);
+    }
+
+    function updateUI() {
+      const turn = chess.turn();
+      turnDot.className = 'turn-dot ' + (turn === 'b' ? 'black' : '');
+
+      if (chess.isCheckmate()) {
+        const winner = turn === 'w' ? 'Obsidian' : 'Marble';
+        statusText.textContent = `Checkmate — ${winner} Wins`;
+        showToast(`Checkmate! ${winner} Victorious`);
+        audioFX.playCathedralBell(true);
+      } else if (chess.isDraw()) {
+        statusText.textContent = 'Stalemate / Draw';
+        showToast('Draw Game');
+      } else {
+        const side = turn === 'w' ? 'Marble' : 'Obsidian';
+        statusText.textContent = `${side}'s Turn`;
+        if (chess.inCheck()) {
+          showToast(`${side} King in Check!`);
+          audioFX.playCathedralBell(false);
+        }
+      }
+
+      const history = chess.history({ verbose: true });
+      const capW = [];
+      const capB = [];
+      history.forEach((h) => {
+        if (h.captured) {
+          if (h.color === 'w') capB.push(UNICODE_PIECES[h.captured] || '♟');
+          else capW.push(UNICODE_PIECES[h.captured] || '♟');
+        }
+      });
+      capturedBEl.textContent = capB.join('') || '—';
+      capturedWEl.textContent = capW.join('') || '—';
+    }
+
+    // Single-Level Toolbar Event Listeners
+    const btnModeAI = document.getElementById('btn-mode-ai');
+    const modeLabel = document.getElementById('mode-label');
+    btnModeAI.addEventListener('click', () => {
+      vsAI = !vsAI;
+      btnModeAI.classList.toggle('active', vsAI);
+      modeLabel.textContent = vsAI ? 'vs. Obsidian AI' : '2-Player Pass';
+      audioFX.playSelect('w');
+      if (vsAI && chess.turn() === 'b' && !chess.isGameOver() && !isAnimating) {
+        makeObsidianAIMove();
+      }
+    });
+
+    const btnAudio = document.getElementById('btn-audio');
+    const audioIcon = document.getElementById('audio-icon');
+    const audioLabel = document.getElementById('audio-label');
+    btnAudio.addEventListener('click', () => {
+      audioFX.enabled = !audioFX.enabled;
+      btnAudio.classList.toggle('active', audioFX.enabled);
+      audioIcon.textContent = audioFX.enabled ? 'volume_up' : 'volume_off';
+      audioLabel.textContent = audioFX.enabled ? 'SFX On' : 'Muted';
+      if (audioFX.enabled) audioFX.playSelect('w');
+    });
+
+    document.getElementById('btn-cam-white').addEventListener('click', () => {
+      audioFX.playSelect('w');
+      moveCameraTo(0, 9.5, 11.5);
+    });
+
+    document.getElementById('btn-cam-black').addEventListener('click', () => {
+      audioFX.playSelect('b');
+      moveCameraTo(0, 9.5, -11.5);
+    });
+
+    document.getElementById('btn-cam-top').addEventListener('click', () => {
+      audioFX.playSelect('w');
+      moveCameraTo(0, 15.5, 0.01);
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      if (isAnimating) return;
+      audioFX.playStoneSlide(0.35, 'w');
+      chess.reset();
+      clearHighlights();
+      selectedSquare = null;
+      validMoves = [];
+      syncPiecesWithBoard();
+      showToast('Cathedral Board Reset');
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ==========================================
+    // 14. MAIN RENDER & PROCEDURAL ANIMATION LOOP
+    // ==========================================
+    buildCathedralAndLights();
+    buildChessboard();
+    syncPiecesWithBoard();
+
+    const mainClock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(mainClock.getDelta(), 0.1);
+      const elapsedTime = mainClock.getElapsedTime();
+
+      if (cameraGoalPos) {
+        camera.position.lerp(cameraGoalPos, 0.08);
+        controls.target.lerp(cameraGoalTarget, 0.08);
+        if (camera.position.distanceTo(cameraGoalPos) < 0.08) {
+          cameraGoalPos = null;
+        }
+      }
+      controls.update();
+
+      pieceMeshes.forEach((mesh) => {
+        if (!isAnimating) {
+          const phase = mesh.userData.idlePhase + elapsedTime * 2.1;
+          mesh.position.y = Math.sin(phase) * 0.025 + 0.025;
+          mesh.rotation.y = mesh.userData.baseRotY + Math.sin(phase * 0.6) * 0.035;
+        }
+      });
+
+      torchLights.forEach((t) => {
+        const flicker = Math.sin(elapsedTime * 11 + t.phase) * 0.6 + Math.cos(elapsedTime * 19 + t.phase) * 0.4;
+        t.light.intensity = t.baseIntensity + flicker;
+        t.flame.scale.setScalar(0.92 + flicker * 0.08);
+      });
+
+      for (let i = activeShards.length - 1; i >= 0; i--) {
+        const s = activeShards[i];
+        s.age += dt;
+        s.velocity.y -= 9.8 * dt;
+        s.mesh.position.addScaledVector(s.velocity, dt);
+
+        if (s.mesh.position.y < 0.06) {
+          s.mesh.position.y = 0.06;
+          s.velocity.y *= -0.42;
+          s.velocity.x *= 0.78;
+          s.velocity.z *= 0.78;
+        }
+
+        s.mesh.rotation.x += s.rotVel.x * dt;
+        s.mesh.rotation.y += s.rotVel.y * dt;
+        s.mesh.rotation.z += s.rotVel.z * dt;
+
+        const lifeRatio = s.age / s.maxAge;
+        if (lifeRatio > 0.65) {
+          s.mesh.material.opacity = Math.max(0, 1 - (lifeRatio - 0.65) / 0.35);
+        }
+
+        if (s.age >= s.maxAge) {
+          scene.remove(s.mesh);
+          s.mesh.geometry.dispose();
+          s.mesh.material.dispose();
+          activeShards.splice(i, 1);
+        }
+      }
+
+      for (let i = activeParticles.length - 1; i >= 0; i--) {
+        const p = activeParticles[i];
+        p.age += dt;
+        p.mesh.position.y += 0.35 * dt;
+        p.mesh.scale.multiplyScalar(0.96);
+        p.mesh.material.opacity = Math.max(0, 0.75 * (1 - p.age / p.maxAge));
+        if (p.age >= p.maxAge) {
+          scene.remove(p.mesh);
+          p.mesh.geometry.dispose();
+          p.mesh.material.dispose();
+          activeParticles.splice(i, 1);
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
