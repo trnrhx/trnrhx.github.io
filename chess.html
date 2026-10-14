@@ -1,1841 +1,1823 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wizard's Chess 3D — Gothic Cathedral</title>
-  <!-- Material Symbols & Google Fonts -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Cinzel:wght@600;700&display=swap" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
-  
-  <style>
-    :root {
-      /* Material Design 3 Dark Theme Tokens */
-      --md-sys-color-surface: rgba(26, 24, 31, 0.82);
-      --md-sys-color-surface-container: rgba(38, 35, 46, 0.9);
-      --md-sys-color-on-surface: #E6E1E5;
-      --md-sys-color-on-surface-variant: #CAC4D0;
-      --md-sys-color-primary: #D0BCFF;
-      --md-sys-color-on-primary: #381E72;
-      --md-sys-color-secondary-container: #4A4458;
-      --md-sys-color-on-secondary-container: #E8DEF8;
-      --md-sys-color-error: #F2B8B5;
-      --md-sys-color-on-error: #601410;
-      --md-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Capablanca Method | Positional & Endgame Chess Tutor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chess.js 0.10.3 for reliable synchronous legal move generation and FEN handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        boardLight: '#e6dec8',
+                        boardDark: '#7a8a74',
+                        boardHighlight: 'rgba(245, 158, 11, 0.45)',
+                        boardTarget: 'rgba(16, 185, 129, 0.45)',
+                        slate950: '#0a0f18',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for academic studio feel */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
-
-    body, html {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0b0a0e;
-      font-family: 'Roboto', sans-serif;
-      color: var(--md-sys-color-on-surface);
-    }
-
-    #canvas-container {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-
-    /* Single-Level Material Design 3 Navigation Bar */
-    .md-top-bar {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: var(--md-sys-color-surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 999px;
-      box-shadow: var(--md-elevation-2);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      max-width: 96vw;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .brand-title {
-      font-family: 'Cinzel', serif;
-      font-weight: 700;
-      font-size: 1.02rem;
-      letter-spacing: 0.06em;
-      color: var(--md-sys-color-primary);
-      padding: 0 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-
-    .divider {
-      width: 1px;
-      height: 24px;
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    /* Turn & Status Chip */
-    .status-chip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: var(--md-sys-color-surface-container);
-      font-size: 0.875rem;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-      white-space: nowrap;
-    }
-
-    .turn-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #f4f1ea;
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-      transition: all 0.3s ease;
-    }
-
-    .turn-dot.black {
-      background: #231f2e;
-      border: 1.5px solid #a899ff;
-      box-shadow: 0 0 8px rgba(168, 153, 255, 0.6);
-    }
-
-    /* Material 3 Tonal & Icon Buttons */
-    .md-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      height: 36px;
-      padding: 0 13px;
-      border-radius: 18px;
-      border: none;
-      background: transparent;
-      color: var(--md-sys-color-on-surface-variant);
-      font-family: 'Roboto', sans-serif;
-      font-size: 0.84rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s cubic-bezier(0.2, 0, 0, 1), color 0.2s, transform 0.1s, box-shadow 0.2s;
-      white-space: nowrap;
-    }
-
-    .md-btn:hover {
-      background: rgba(208, 188, 255, 0.12);
-      color: var(--md-sys-color-on-surface);
-    }
-
-    .md-btn:active {
-      transform: scale(0.96);
-    }
-
-    .md-btn.active {
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
-    }
-
-    /* Voice Listening Active Pulse */
-    .md-btn.listening {
-      background: var(--md-sys-color-error);
-      color: var(--md-sys-color-on-error);
-      animation: pulse-mic 1.6s infinite ease-in-out;
-    }
-
-    @keyframes pulse-mic {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(242, 184, 181, 0.55); }
-      50% { box-shadow: 0 0 0 8px rgba(242, 184, 181, 0); }
-    }
-
-    .md-btn-primary {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-    }
-
-    .md-btn-primary:hover {
-      background: #decffe;
-      color: var(--md-sys-color-on-primary);
-    }
-
-    .material-symbols-rounded {
-      font-size: 18px;
-    }
-
-    /* Subtle Bottom Graveyard / Captured HUD (Non-interactive) */
-    .hud-footer {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      gap: 16px;
-      pointer-events: none;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .capture-tray {
-      background: var(--md-sys-color-surface);
-      backdrop-filter: blur(12px);
-      padding: 6px 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      font-size: 0.8rem;
-      color: var(--md-sys-color-on-surface-variant);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 140px;
-      box-shadow: var(--md-elevation-2);
-    }
-
-    .capture-icons {
-      font-size: 1rem;
-      letter-spacing: 2px;
-      color: var(--md-sys-color-on-surface);
-    }
-
-    /* Toast Notification for Check / Shatter / Voice Transcript */
-    #toast {
-      position: fixed;
-      top: 84px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-10px);
-      z-index: 10;
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-      padding: 6px 18px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.82rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
-      box-shadow: var(--md-elevation-2);
-      white-space: nowrap;
-    }
-
-    #toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-  </style>
-
-  <!-- Import Map for Three.js & Chess.js -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-        "chess.js": "https://unpkg.com/chess.js@1.0.0-beta.6/dist/esm/chess.js"
-      }
-    }
-  </script>
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            aspect-ratio: 1 / 1;
+            user-select: none;
+        }
+        .square {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.12s ease;
+        }
+        .square.light { background-color: #e8dfd1; color: #5c6b57; }
+        .square.dark { background-color: #6e8068; color: #e8dfd1; }
+        .square.selected { background-color: rgba(245, 158, 11, 0.65) !important; }
+        .square.last-move { background-color: rgba(234, 179, 8, 0.38) !important; }
+        
+        .legal-dot {
+            width: 26%;
+            height: 26%;
+            border-radius: 50%;
+            background-color: rgba(15, 23, 42, 0.35);
+            pointer-events: none;
+            transition: transform 0.15s ease;
+        }
+        .square:hover .legal-dot {
+            transform: scale(1.25);
+            background-color: rgba(15, 23, 42, 0.55);
+        }
+        .legal-capture {
+            position: absolute;
+            inset: 4px;
+            border: 4px solid rgba(220, 38, 38, 0.55);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .piece-svg {
+            width: 84%;
+            height: 84%;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+            transition: transform 0.15s ease;
+            z-index: 10;
+        }
+        .square:hover .piece-svg {
+            transform: translateY(-1px);
+        }
+        .coord-rank {
+            position: absolute;
+            top: 3px;
+            left: 5px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            pointer-events: none;
+        }
+        .coord-file {
+            position: absolute;
+            bottom: 3px;
+            right: 5px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            pointer-events: none;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.85); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 0.5; }
+            100% { transform: scale(0.85); opacity: 0.9; }
+        }
+        .strategic-pulse {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+    </style>
 </head>
-<body>
-
-  <!-- Single-Level Material Design Navigation Bar -->
-  <header class="md-top-bar" role="toolbar" aria-label="Game Controls">
-    <div class="brand-title">
-      <span class="material-symbols-rounded">castle</span>
-      Wizard's Chess
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="status-chip" id="status-chip">
-      <span class="turn-dot" id="turn-dot"></span>
-      <span id="status-text">Marble's Turn</span>
-    </div>
-
-    <div class="divider"></div>
-
-    <button class="md-btn active" id="btn-mode-ai" title="Toggle AI Opponent">
-      <span class="material-symbols-rounded">smart_toy</span>
-      <span id="mode-label">vs. Obsidian AI</span>
-    </button>
-
-    <button class="md-btn" id="btn-cam-white" title="Marble Perspective">
-      <span class="material-symbols-rounded">south</span>
-      Marble
-    </button>
-
-    <button class="md-btn" id="btn-cam-black" title="Obsidian Perspective">
-      <span class="material-symbols-rounded">north</span>
-      Obsidian
-    </button>
-
-    <button class="md-btn" id="btn-cam-top" title="Cathedral Vault Overhead View">
-      <span class="material-symbols-rounded">grid_view</span>
-      Overhead
-    </button>
-
-    <button class="md-btn active" id="btn-audio" title="Toggle Cathedral Audio FX">
-      <span class="material-symbols-rounded" id="audio-icon">volume_up</span>
-      <span id="audio-label">SFX On</span>
-    </button>
-
-    <button class="md-btn" id="btn-voice" title="Speak Moves (e.g., 'Knight to F3', 'Pawn to E4')">
-      <span class="material-symbols-rounded" id="voice-icon">mic_off</span>
-      <span id="voice-label">Voice Off</span>
-    </button>
-
-    <div class="divider"></div>
-
-    <button class="md-btn md-btn-primary" id="btn-reset" title="Reset Board">
-      <span class="material-symbols-rounded">refresh</span>
-      New Game
-    </button>
-  </header>
-
-  <div id="toast">Check!</div>
-
-  <!-- Non-interactive Status Tray for Shattered Pieces -->
-  <footer class="hud-footer">
-    <div class="capture-tray">
-      <span>Shattered Obsidian:</span>
-      <span class="capture-icons" id="captured-b">—</span>
-    </div>
-    <div class="capture-tray">
-      <span>Shattered Marble:</span>
-      <span class="capture-icons" id="captured-w">—</span>
-    </div>
-  </footer>
-
-  <div id="canvas-container"></div>
-
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { Chess } from 'chess.js';
-
-    // ==========================================
-    // 1. PROCEDURAL WEB AUDIO ENGINE (CATHEDRAL SFX)
-    // ==========================================
-    class CathedralAudioEngine {
-      constructor() {
-        this.ctx = null;
-        this.enabled = true;
-        this.masterGain = null;
-        this.reverbNode = null;
-        this.noiseBuffer = null;
-      }
-
-      init() {
-        if (this.ctx) {
-          if (this.ctx.state === 'suspended') this.ctx.resume();
-          return;
-        }
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        this.ctx = new AudioCtx();
-
-        const compressor = this.ctx.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
-        compressor.ratio.setValueAtTime(4, this.ctx.currentTime);
-        compressor.connect(this.ctx.destination);
-
-        this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.85;
-        this.masterGain.connect(compressor);
-
-        // Cathedral Convolution Reverb (2.4s stone hall impulse response)
-        this.reverbNode = this.ctx.createConvolver();
-        this.reverbNode.buffer = this._createCathedralImpulse(2.4, 2.8);
-        const reverbGain = this.ctx.createGain();
-        reverbGain.gain.value = 0.42;
-        this.reverbNode.connect(reverbGain);
-        reverbGain.connect(this.masterGain);
-
-        this.noiseBuffer = this._createStoneNoiseBuffer(3.0);
-      }
-
-      _createCathedralImpulse(duration, decay) {
-        const rate = this.ctx.sampleRate;
-        const length = rate * duration;
-        const impulse = this.ctx.createBuffer(2, length, rate);
-        for (let ch = 0; ch < 2; ch++) {
-          const data = impulse.getChannelData(ch);
-          for (let i = 0; i < length; i++) {
-            const env = Math.pow(1 - i / length, decay);
-            data[i] = (Math.random() * 2 - 1) * env * 0.6;
-          }
-        }
-        return impulse;
-      }
-
-      _createStoneNoiseBuffer(duration) {
-        const rate = this.ctx.sampleRate;
-        const length = rate * duration;
-        const buffer = this.ctx.createBuffer(1, length, rate);
-        const data = buffer.getChannelData(0);
-        let b0 = 0, b1 = 0, b2 = 0;
-        for (let i = 0; i < length; i++) {
-          const white = Math.random() * 2 - 1;
-          b0 = 0.99765 * b0 + white * 0.0990460;
-          b1 = 0.96300 * b1 + white * 0.2965164;
-          b2 = 0.57000 * b2 + white * 0.0526913;
-          data[i] = (b0 + b1 + b2 + white * 0.1848) * 0.15;
-        }
-        return buffer;
-      }
-
-      _connectWithReverb(node, wetAmount = 0.5) {
-        node.connect(this.masterGain);
-        if (this.reverbNode && wetAmount > 0) {
-          const send = this.ctx.createGain();
-          send.gain.value = wetAmount;
-          node.connect(send);
-          send.connect(this.reverbNode);
-        }
-      }
-
-      playSelect(color = 'w') {
-        if (!this.enabled) return;
-        this.init();
-        const now = this.ctx.currentTime;
-
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        const baseFreq = color === 'w' ? 420 : 680;
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(baseFreq, now);
-        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.35, now + 0.065);
-
-        gain.gain.setValueAtTime(0.22, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-
-        osc.connect(gain);
-        this._connectWithReverb(gain, 0.35);
-        osc.start(now);
-        osc.stop(now + 0.08);
-      }
-
-      // Arcane harmonic chime when a spoken voice command is recognized
-      playVoiceChime() {
-        if (!this.enabled) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 arcane triad
-        notes.forEach((freq, i) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + i * 0.045);
-
-          gain.gain.setValueAtTime(0.001, now);
-          gain.gain.setValueAtTime(0.14, now + i * 0.045);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.045 + 0.45);
-
-          osc.connect(gain);
-          this._connectWithReverb(gain, 0.75);
-          osc.start(now + i * 0.045);
-          osc.stop(now + i * 0.045 + 0.48);
-        });
-      }
-
-      playStoneSlide(duration = 0.48, color = 'w') {
-        if (!this.enabled) return;
-        this.init();
-        const now = this.ctx.currentTime;
-
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = this.noiseBuffer;
-        noise.loop = true;
-
-        const lowBand = this.ctx.createBiquadFilter();
-        lowBand.type = 'bandpass';
-        lowBand.frequency.setValueAtTime(color === 'w' ? 145 : 185, now);
-        lowBand.frequency.linearRampToValueAtTime(color === 'w' ? 210 : 260, now + duration * 0.7);
-        lowBand.Q.value = 2.4;
-
-        const gritBand = this.ctx.createBiquadFilter();
-        gritBand.type = 'bandpass';
-        gritBand.frequency.setValueAtTime(color === 'w' ? 520 : 780, now);
-        gritBand.Q.value = 3.5;
-
-        const slideGain = this.ctx.createGain();
-        slideGain.gain.setValueAtTime(0.001, now);
-        slideGain.gain.linearRampToValueAtTime(0.42, now + 0.06);
-        slideGain.gain.setValueAtTime(0.38, now + duration - 0.08);
-        slideGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-        noise.connect(lowBand);
-        noise.connect(gritBand);
-        lowBand.connect(slideGain);
-        gritBand.connect(slideGain);
-        this._connectWithReverb(slideGain, 0.55);
-
-        noise.start(now, Math.random() * 1.5);
-        noise.stop(now + duration + 0.02);
-
-        const settleTime = now + duration - 0.04;
-        const thudOsc = this.ctx.createOscillator();
-        const thudGain = this.ctx.createGain();
-        thudOsc.type = 'sine';
-        thudOsc.frequency.setValueAtTime(95, settleTime);
-        thudOsc.frequency.exponentialRampToValueAtTime(32, settleTime + 0.11);
-
-        thudGain.gain.setValueAtTime(0.001, now);
-        thudGain.gain.setValueAtTime(0.35, settleTime);
-        thudGain.gain.exponentialRampToValueAtTime(0.001, settleTime + 0.12);
-
-        thudOsc.connect(thudGain);
-        this._connectWithReverb(thudGain, 0.65);
-        thudOsc.start(settleTime);
-        thudOsc.stop(settleTime + 0.13);
-      }
-
-      playKnightLeap(duration = 0.48) {
-        if (!this.enabled) return;
-        this.init();
-        const now = this.ctx.currentTime;
-
-        const whoosh = this.ctx.createBufferSource();
-        whoosh.buffer = this.noiseBuffer;
-
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.Q.value = 1.8;
-        filter.frequency.setValueAtTime(160, now);
-        filter.frequency.exponentialRampToValueAtTime(520, now + duration * 0.5);
-        filter.frequency.exponentialRampToValueAtTime(140, now + duration);
-
-        const whooshGain = this.ctx.createGain();
-        whooshGain.gain.setValueAtTime(0.01, now);
-        whooshGain.gain.linearRampToValueAtTime(0.28, now + duration * 0.45);
-        whooshGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-        whoosh.connect(filter);
-        filter.connect(whooshGain);
-        this._connectWithReverb(whooshGain, 0.5);
-        whoosh.start(now);
-        whoosh.stop(now + duration);
-
-        const landTime = now + duration - 0.03;
-        const subOsc = this.ctx.createOscillator();
-        const subGain = this.ctx.createGain();
-        subOsc.type = 'sine';
-        subOsc.frequency.setValueAtTime(125, landTime);
-        subOsc.frequency.exponentialRampToValueAtTime(26, landTime + 0.18);
-
-        subGain.gain.setValueAtTime(0.001, now);
-        subGain.gain.setValueAtTime(0.65, landTime);
-        subGain.gain.exponentialRampToValueAtTime(0.001, landTime + 0.20);
-
-        subOsc.connect(subGain);
-        this._connectWithReverb(subGain, 0.8);
-        subOsc.start(landTime);
-        subOsc.stop(landTime + 0.21);
-
-        const clickOsc = this.ctx.createOscillator();
-        const clickGain = this.ctx.createGain();
-        clickOsc.type = 'triangle';
-        clickOsc.frequency.setValueAtTime(340, landTime);
-        clickOsc.frequency.exponentialRampToValueAtTime(85, landTime + 0.05);
-
-        clickGain.gain.setValueAtTime(0.001, now);
-        clickGain.gain.setValueAtTime(0.3, landTime);
-        clickGain.gain.exponentialRampToValueAtTime(0.001, landTime + 0.06);
-
-        clickOsc.connect(clickGain);
-        this._connectWithReverb(clickGain, 0.4);
-        clickOsc.start(landTime);
-        clickOsc.stop(landTime + 0.07);
-      }
-
-      playAttackWindup() {
-        if (!this.enabled) return;
-        this.init();
-        const now = this.ctx.currentTime;
-
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(75, now);
-        osc.frequency.exponentialRampToValueAtTime(190, now + 0.35);
-
-        const lp = this.ctx.createBiquadFilter();
-        lp.type = 'lowpass';
-        lp.frequency.setValueAtTime(320, now);
-
-        gain.gain.setValueAtTime(0.01, now);
-        gain.gain.linearRampToValueAtTime(0.22, now + 0.3);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
-
-        osc.connect(lp);
-        lp.connect(gain);
-        this._connectWithReverb(gain, 0.6);
-        osc.start(now);
-        osc.stop(now + 0.44);
-      }
-
-      playShatter(victimColor = 'b') {
-        if (!this.enabled) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const isObsidian = victimColor === 'b';
-
-        const boomOsc = this.ctx.createOscillator();
-        const boomGain = this.ctx.createGain();
-        boomOsc.type = 'sine';
-        boomOsc.frequency.setValueAtTime(150, now);
-        boomOsc.frequency.exponentialRampToValueAtTime(22, now + 0.38);
-
-        boomGain.gain.setValueAtTime(0.85, now);
-        boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
-
-        boomOsc.connect(boomGain);
-        this._connectWithReverb(boomGain, 0.85);
-        boomOsc.start(now);
-        boomOsc.stop(now + 0.44);
-
-        const crunch = this.ctx.createBufferSource();
-        crunch.buffer = this.noiseBuffer;
-
-        const crunchFilter = this.ctx.createBiquadFilter();
-        crunchFilter.type = 'bandpass';
-        crunchFilter.frequency.setValueAtTime(isObsidian ? 1850 : 920, now);
-        crunchFilter.Q.value = 1.2;
-
-        const crunchGain = this.ctx.createGain();
-        crunchGain.gain.setValueAtTime(0.75, now);
-        crunchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
-
-        crunch.connect(crunchFilter);
-        crunchFilter.connect(crunchGain);
-        this._connectWithReverb(crunchGain, 0.75);
-        crunch.start(now, Math.random());
-        crunch.stop(now + 0.28);
-
-        const shardCount = 14;
-        for (let i = 0; i < shardCount; i++) {
-          const delay = 0.015 + Math.pow(Math.random(), 1.6) * 0.82;
-          const t = now + delay;
-          const shardDur = 0.035 + Math.random() * 0.055;
-
-          const shardOsc = this.ctx.createOscillator();
-          const shardGain = this.ctx.createGain();
-
-          const minF = isObsidian ? 1600 : 650;
-          const maxF = isObsidian ? 5200 : 2300;
-          const freq = minF + Math.random() * (maxF - minF);
-
-          shardOsc.type = isObsidian ? 'sine' : 'triangle';
-          shardOsc.frequency.setValueAtTime(freq, t);
-          shardOsc.frequency.exponentialRampToValueAtTime(freq * 0.62, t + shardDur);
-
-          const amp = (1 - delay / 0.95) * 0.22;
-          shardGain.gain.setValueAtTime(0.0001, now);
-          shardGain.gain.setValueAtTime(Math.max(0.02, amp), t);
-          shardGain.gain.exponentialRampToValueAtTime(0.0001, t + shardDur);
-
-          shardOsc.connect(shardGain);
-          this._connectWithReverb(shardGain, 0.65);
-          shardOsc.start(t);
-          shardOsc.stop(t + shardDur + 0.01);
-        }
-      }
-
-      playCathedralBell(isCheckmate = false) {
-        if (!this.enabled) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const partials = isCheckmate ? [220, 277.18, 329.63, 440] : [293.66, 440, 587.33];
-
-        partials.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now);
-
-          const dur = isCheckmate ? 2.4 : 1.2;
-          gain.gain.setValueAtTime(0.16 / (idx + 1), now);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-          osc.connect(gain);
-          this._connectWithReverb(gain, 0.9);
-          osc.start(now);
-          osc.stop(now + dur + 0.05);
-        });
-      }
-    }
-
-    const audioFX = new CathedralAudioEngine();
-
-    // ==========================================
-    // 2. STATE & CONFIGURATION
-    // ==========================================
-    const SQUARE_SIZE = 1.25;
-    const BOARD_OFFSET = (7 * SQUARE_SIZE) / 2;
-    const chess = new Chess();
-
-    let vsAI = true;
-    let isAnimating = false;
-    let selectedSquare = null;
-    let validMoves = [];
-
-    const pieceMeshes = new Map();
-    const squareMeshes = new Map();
-    const highlightMeshes = [];
-    const activeShards = [];
-    const activeParticles = [];
-    const torchLights = [];
-
-    // ==========================================
-    // 3. THREE.JS SCENE, CAMERA & RENDERER
-    // ==========================================
-    const container = document.getElementById('canvas-container');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0a0f);
-    scene.fog = new THREE.FogExp2(0x0b0a0f, 0.022);
-
-    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 120);
-    camera.position.set(0, 9.5, 11.5);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
-    container.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.06;
-    controls.maxPolarAngle = Math.PI / 2 - 0.04;
-    controls.minDistance = 5;
-    controls.maxDistance = 26;
-    controls.target.set(0, 0.4, 0);
-
-    let cameraGoalPos = null;
-    let cameraGoalTarget = new THREE.Vector3(0, 0.4, 0);
-
-    function moveCameraTo(x, y, z) {
-      cameraGoalPos = new THREE.Vector3(x, y, z);
-    }
-
-    // ==========================================
-    // 4. MATERIALS (MARBLE, OBSIDIAN, CATHEDRAL)
-    // ==========================================
-    const marbleMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xf3efe6,
-      roughness: 0.18,
-      metalness: 0.05,
-      clearcoat: 0.5,
-      clearcoatRoughness: 0.15,
-      reflectivity: 0.7
-    });
-
-    const obsidianMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x14121d,
-      roughness: 0.08,
-      metalness: 0.25,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.06,
-      emissive: 0x190e2e,
-      emissiveIntensity: 0.25
-    });
-
-    const whiteSquareMat = new THREE.MeshStandardMaterial({
-      color: 0xd8d2c5,
-      roughness: 0.35,
-      metalness: 0.05
-    });
-
-    const blackSquareMat = new THREE.MeshStandardMaterial({
-      color: 0x262330,
-      roughness: 0.22,
-      metalness: 0.15
-    });
-
-    const gothicStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x1d1b24,
-      roughness: 0.85,
-      metalness: 0.08
-    });
-
-    const gothicTrimMat = new THREE.MeshStandardMaterial({
-      color: 0x2c2836,
-      roughness: 0.6,
-      metalness: 0.2
-    });
-
-    // ==========================================
-    // 5. LIGHTING & GOTHIC CATHEDRAL ARCHITECTURE
-    // ==========================================
-    function buildCathedralAndLights() {
-      const ambientLight = new THREE.AmbientLight(0x403e5c, 0.9);
-      scene.add(ambientLight);
-
-      const moonLight = new THREE.DirectionalLight(0x9bb8ff, 2.2);
-      moonLight.position.set(12, 22, 10);
-      moonLight.castShadow = true;
-      moonLight.shadow.mapSize.width = 2048;
-      moonLight.shadow.mapSize.height = 2048;
-      moonLight.shadow.camera.near = 2;
-      moonLight.shadow.camera.far = 45;
-      const d = 9;
-      moonLight.shadow.camera.left = -d;
-      moonLight.shadow.camera.right = d;
-      moonLight.shadow.camera.top = d;
-      moonLight.shadow.camera.bottom = -d;
-      moonLight.shadow.bias = -0.0005;
-      scene.add(moonLight);
-
-      const floorGeo = new THREE.PlaneGeometry(80, 80);
-      const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x111016,
-        roughness: 0.75,
-        metalness: 0.1
-      });
-      const floor = new THREE.Mesh(floorGeo, floorMat);
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -0.6;
-      floor.receiveShadow = true;
-      scene.add(floor);
-
-      const pedestal1 = new THREE.Mesh(new THREE.BoxGeometry(12.4, 0.35, 12.4), gothicStoneMat);
-      pedestal1.position.y = -0.42;
-      pedestal1.receiveShadow = true;
-      scene.add(pedestal1);
-
-      const pedestal2 = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.3, 11.0), gothicTrimMat);
-      pedestal2.position.y = -0.15;
-      pedestal2.receiveShadow = true;
-      pedestal2.castShadow = true;
-      scene.add(pedestal2);
-
-      const pillarPositions = [];
-      for (let z = -18; z <= 18; z += 9) {
-        pillarPositions.push([-11, z], [11, z]);
-      }
-
-      pillarPositions.forEach(([px, pz], idx) => {
-        const pillarGroup = new THREE.Group();
-        pillarGroup.position.set(px, -0.6, pz);
-
-        const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 2.2), gothicTrimMat);
-        plinth.position.y = 0.6;
-        pillarGroup.add(plinth);
-
-        const mainShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.85, 16, 12), gothicStoneMat);
-        mainShaft.position.y = 8.6;
-        mainShaft.castShadow = true;
-        mainShaft.receiveShadow = true;
-        pillarGroup.add(mainShaft);
-
-        for (let a = 0; a < 4; a++) {
-          const angle = (a * Math.PI) / 2;
-          const subShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.28, 16, 8), gothicTrimMat);
-          subShaft.position.set(Math.cos(angle) * 0.72, 8.6, Math.sin(angle) * 0.72);
-          pillarGroup.add(subShaft);
-        }
-
-        const capital = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 0.8, 1.0, 8), gothicTrimMat);
-        capital.position.y = 16.8;
-        pillarGroup.add(capital);
-
-        if (px < 0) {
-          const archCurve = new THREE.TorusGeometry(11, 0.35, 8, 32, Math.PI);
-          const archMesh = new THREE.Mesh(archCurve, gothicTrimMat);
-          archMesh.position.set(11, 17.2, 0);
-          pillarGroup.add(archMesh);
-        }
-
-        if (Math.abs(pz) <= 9) {
-          const sign = px < 0 ? 1 : -1;
-          const sconce = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 8), gothicTrimMat);
-          sconce.position.set(sign * 0.95, 4.2, 0);
-          sconce.rotation.z = sign * -0.25;
-          pillarGroup.add(sconce);
-
-          const flameGeo = new THREE.SphereGeometry(0.14, 8, 8);
-          const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa33 });
-          const flame = new THREE.Mesh(flameGeo, flameMat);
-          flame.position.set(sign * 1.02, 4.6, 0);
-          pillarGroup.add(flame);
-
-          const torch = new THREE.PointLight(0xff8c3b, 9, 19, 1.6);
-          torch.position.set(px + sign * 1.2, 4.2, pz);
-          torch.castShadow = false;
-          scene.add(torch);
-          torchLights.push({ light: torch, flame, baseIntensity: 9, phase: idx * 1.7 });
-        }
-
-        scene.add(pillarGroup);
-      });
-
-      const roseGroup = new THREE.Group();
-      roseGroup.position.set(0, 11, -24);
-      const roseRing = new THREE.Mesh(
-        new THREE.RingGeometry(3.8, 4.5, 24),
-        new THREE.MeshBasicMaterial({ color: 0x3b2d54, side: THREE.DoubleSide })
-      );
-      const roseGlow = new THREE.Mesh(
-        new THREE.CircleGeometry(3.8, 24),
-        new THREE.MeshBasicMaterial({ color: 0x251f47 })
-      );
-      roseGroup.add(roseRing, roseGlow);
-      scene.add(roseGroup);
-    }
-
-    // ==========================================
-    // 6. CHESSBOARD & COORDINATE HELPERS
-    // ==========================================
-    function squareToWorld(square) {
-      const file = square.charCodeAt(0) - 97;
-      const rank = parseInt(square[1], 10) - 1;
-      const x = file * SQUARE_SIZE - BOARD_OFFSET;
-      const z = (7 - rank) * SQUARE_SIZE - BOARD_OFFSET;
-      return new THREE.Vector3(x, 0, z);
-    }
-
-    function buildChessboard() {
-      const boardGroup = new THREE.Group();
-      const squareGeo = new THREE.BoxGeometry(SQUARE_SIZE, 0.2, SQUARE_SIZE);
-
-      const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-      for (let r = 0; r < 8; r++) {
-        for (let f = 0; f < 8; f++) {
-          const isLight = (r + f) % 2 === 1;
-          const squareName = `${files[f]}${r + 1}`;
-          const mesh = new THREE.Mesh(squareGeo, isLight ? whiteSquareMat : blackSquareMat);
-          const pos = squareToWorld(squareName);
-          mesh.position.set(pos.x, -0.1, pos.z);
-          mesh.receiveShadow = true;
-          mesh.userData = { square: squareName };
-          boardGroup.add(mesh);
-          squareMeshes.set(squareName, mesh);
-        }
-      }
-      scene.add(boardGroup);
-    }
-
-    // ==========================================
-    // 7. PROCEDURAL 3D WIZARD'S CHESS PIECES
-    // ==========================================
-    function createPieceGeometry(type, color) {
-      const mat = color === 'w' ? marbleMaterial : obsidianMaterial;
-      const group = new THREE.Group();
-
-      const basePoints = [
-        new THREE.Vector2(0, 0),
-        new THREE.Vector2(0.42, 0),
-        new THREE.Vector2(0.42, 0.08),
-        new THREE.Vector2(0.35, 0.14),
-        new THREE.Vector2(0.32, 0.22),
-        new THREE.Vector2(0.24, 0.28)
-      ];
-
-      if (type === 'p') {
-        const pts = [
-          ...basePoints,
-          new THREE.Vector2(0.16, 0.55),
-          new THREE.Vector2(0.24, 0.62),
-          new THREE.Vector2(0.14, 0.68),
-          new THREE.Vector2(0.20, 0.85),
-          new THREE.Vector2(0.12, 1.02),
-          new THREE.Vector2(0, 1.08)
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-30">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-serif font-bold text-xl shadow-inner">
+                    ♔
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-serif text-lg sm:text-xl font-bold tracking-tight text-slate-100">The Capablanca Method</h1>
+                        <span class="hidden md:inline-block text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">Chess Fundamentals</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Endgame-First Mastery, Crystal Positional Clarity & Petite Combinations</p>
+                </div>
+            </div>
+
+            <!-- Mode Switcher Tabs -->
+            <nav class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+                <button onclick="switchMode('curriculum')" id="tab-curriculum" class="px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-amber-500 text-slate-950 font-semibold shadow">
+                    1. Structured Curriculum
+                </button>
+                <button onclick="switchMode('sparring')" id="tab-sparring" class="px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-slate-200">
+                    2. Positional Sparring & Analyzer
+                </button>
+                <button onclick="switchMode('codex')" id="tab-codex" class="px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-slate-200">
+                    3. Capablanca's Codex
+                </button>
+            </nav>
+
+            <!-- Progress Pill -->
+            <div class="hidden xl:flex items-center gap-3 bg-slate-950/90 px-3.5 py-1.5 rounded-lg border border-slate-800">
+                <div class="text-right">
+                    <div class="text-[11px] font-mono uppercase text-slate-400">Mastery Progress</div>
+                    <div id="progress-text" class="text-xs font-semibold text-emerald-400">0 / 9 Modules Completed</div>
+                </div>
+                <div class="w-24 h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5">
+        
+        <!-- VIEW 1 & 2: INTERACTIVE BOARD + COACHING WORKSPACE -->
+        <div id="workspace-board-view" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- LEFT COLUMN: Curriculum Syllabus OR Sparring Scenario Selector (3 cols) -->
+            <aside class="lg:col-span-3 bg-slate-900/70 border border-slate-800/90 rounded-xl overflow-hidden flex flex-col max-h-[85vh]">
+                <!-- Curriculum Sidebar Header -->
+                <div id="sidebar-curriculum-header" class="p-4 border-b border-slate-800 bg-slate-900">
+                    <h2 class="text-xs font-mono uppercase tracking-wider text-amber-400 font-semibold">Syllabus & Drills</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">"In order to improve your game, you must study the endgame before everything else."</p>
+                </div>
+
+                <!-- Sparring Sidebar Header (Hidden by default) -->
+                <div id="sidebar-sparring-header" class="p-4 border-b border-slate-800 bg-slate-900 hidden">
+                    <h2 class="text-xs font-mono uppercase tracking-wider text-emerald-400 font-semibold">Live Sparring Positions</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Play out critical structures against the heuristic coach. Every move is graded on 5 Capablanca Metrics.</p>
+                </div>
+
+                <!-- Dynamic List Container -->
+                <div id="lesson-list-container" class="p-3 space-y-4 overflow-y-auto flex-1">
+                    <!-- Populated via JS -->
+                </div>
+            </aside>
+
+            <!-- CENTER COLUMN: 2D Staunton Board + SVG Tactical Overlay + Controls (5 cols) -->
+            <section class="lg:col-span-5 flex flex-col items-center">
+                <div class="w-full max-w-[540px] bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 shadow-2xl">
+                    
+                    <!-- Top Status Bar (Opponent / Turn / FEN Info) -->
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div class="flex items-center gap-2">
+                            <span id="turn-indicator-dot" class="w-3 h-3 rounded-full bg-slate-100 ring-2 ring-amber-400/50"></span>
+                            <span id="turn-indicator-text" class="text-xs sm:text-sm font-semibold text-slate-200">White to Move</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="lesson-badge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Module 1.1</span>
+                            <button onclick="toggleVisualAnnotations()" id="btn-toggle-overlay" title="Toggle Strategic Overlay Arrows & Zones" class="text-xs font-mono px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition">
+                                Overlay: ON
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chessboard Relative Wrapper -->
+                    <div class="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-slate-700 shadow-inner">
+                        <!-- 8x8 Square Grid -->
+                        <div id="chessboard" class="board-grid w-full h-full"></div>
+
+                        <!-- SVG Strategic Overlay (Arrows, Outposts, Rule of the Square, Pawn Islands, Cutoffs) -->
+                        <svg id="board-svg-overlay" viewBox="0 0 800 800" class="absolute inset-0 w-full h-full pointer-events-none z-20">
+                            <defs>
+                                <marker id="arrow-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+                                </marker>
+                                <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+                                </marker>
+                                <marker id="arrow-rose" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
+                                </marker>
+                                <marker id="arrow-sky" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+                                </marker>
+                            </defs>
+                            <g id="svg-zones-layer"></g>
+                            <g id="svg-arrows-layer"></g>
+                        </svg>
+                    </div>
+
+                    <!-- Legend for Visual Annotations -->
+                    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-slate-400 border-t border-slate-800/80 pt-2.5">
+                        <div class="flex items-center gap-3">
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"></span> Capablanca Plan / Key Square</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500 inline-block"></span> Restriction / Cutoff Line</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block"></span> Structural Weakness</span>
+                        </div>
+                        <span id="step-counter-label" class="font-mono text-slate-300 font-medium">Step 1 / 3</span>
+                    </div>
+
+                    <!-- Control Toolbar -->
+                    <div class="mt-3 grid grid-cols-4 gap-2">
+                        <button onclick="prevStep()" id="btn-prev" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition disabled:opacity-40">
+                            <span>←</span> Prev
+                        </button>
+                        <button onclick="resetCurrentLesson()" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition">
+                            <span>↺</span> Reset
+                        </button>
+                        <button onclick="showStrategicHint()" id="btn-hint" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-medium transition">
+                            <span>💡</span> Hint
+                        </button>
+                        <button onclick="nextStepOrLesson()" id="btn-next" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow">
+                            Next <span>→</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: Tutor Commentary, Interactive Feedback & 5-Metric Analyzer (4 cols) -->
+            <section class="lg:col-span-4 flex flex-col gap-4">
+                
+                <!-- Lesson / Position Briefing Card -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 shadow-xl">
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                            <span id="lesson-category-tag" class="text-[11px] font-mono uppercase tracking-wider text-amber-400">Module 1: Endgame First</span>
+                            <h2 id="lesson-title" class="font-serif text-xl font-bold text-white mt-0.5">1.1 The Rule of the Square & Direct Opposition</h2>
+                        </div>
+                    </div>
+
+                    <!-- Capablanca Quote Block -->
+                    <blockquote id="lesson-quote" class="my-3 pl-3 border-l-2 border-amber-500/60 italic text-xs text-slate-300 bg-slate-950/50 py-2 pr-3 rounded-r">
+                        "The King, a purely defensive piece throughout the middlegame, becomes an attacking piece in the ending." — José Raúl Capablanca
+                    </blockquote>
+
+                    <!-- Strategic Objective & Concept Explanation -->
+                    <div id="lesson-theory-text" class="text-xs sm:text-sm text-slate-300 leading-relaxed space-y-2 mt-3">
+                        <!-- Populated via JS -->
+                    </div>
+
+                    <!-- Prompt Callout -->
+                    <div class="mt-4 p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-start gap-2.5">
+                        <span class="text-amber-400 text-base leading-none mt-0.5">🎯</span>
+                        <div>
+                            <div class="text-[11px] font-mono uppercase text-amber-400 font-semibold">Your Objective on the Board</div>
+                            <p id="lesson-prompt" class="text-xs sm:text-sm text-slate-100 font-medium mt-0.5"> Seize direct opposition with your King to force a path for the e-pawn.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Coach Feedback Box -->
+                <div id="feedback-card" class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 transition-all">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span id="feedback-status-badge" class="text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                            Awaiting Your Move
+                        </span>
+                        <span id="move-san-display" class="text-xs font-mono text-slate-400"></span>
+                    </div>
+                    <p id="feedback-message" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Click a piece on the board and move it to execute Capablanca's plan. Use the <span class="text-emerald-400 font-medium">Overlay</span> button to inspect key squares and geometric lines.
+                    </p>
+                </div>
+
+                <!-- Capablanca 5-Metric Positional Analyzer -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="text-xs font-mono uppercase tracking-wider text-emerald-400 font-semibold">Capablanca Principle Analyzer</h3>
+                            <p class="text-[11px] text-slate-400">Live heuristic evaluation across 5 classical axes</p>
+                        </div>
+                        <span id="overall-positional-grade" class="text-xs font-mono font-bold px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            Positional Clarity: 88%
+                        </span>
+                    </div>
+
+                    <div id="metrics-bars-container" class="space-y-2.5 text-xs">
+                        <!-- Dynamically rendered 5 metrics -->
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- VIEW 3: CAPABLANCA'S CODEX (MAXIMS & CHECKLISTS) -->
+        <div id="workspace-codex-view" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                <div class="max-w-3xl">
+                    <span class="text-xs font-mono uppercase tracking-wider text-amber-400">Reference Codex & Actionable Checklists</span>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white mt-1">Capablanca's Maxims & Mental Models</h2>
+                    <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+                        Capablanca disliked memorizing reams of opening variations. Instead, he relied on crystal-clear structural principles, economic piece coordination, and an unerring feel for the endgame transition. Use this reference guide during your own games.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Card 1 -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">Mental Checklist</span>
+                            <span class="text-lg">🧭</span>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-white mb-2">The 4-Step Positional Decision Loop</h3>
+                        <p class="text-xs text-slate-400 mb-3">Before touching a piece in the middlegame or endgame, ask yourself in strict order:</p>
+                        <ol class="space-y-2.5 text-xs sm:text-sm text-slate-200 list-decimal list-inside">
+                            <li><strong class="text-amber-300">Prophylaxis First:</strong> What is my opponent's immediate threat or next active idea? Can I strangle it before it begins?</li>
+                            <li><strong class="text-amber-300">Endgame Transition Check:</strong> If all major pieces were traded right now, who wins the King-and-Pawn endgame?</li>
+                            <li><strong class="text-amber-300">Worst-Placed Piece:</strong> Which of my pieces has the least scope, and what is its ideal outpost or open file?</li>
+                            <li><strong class="text-amber-300">Color Complex & Pawns:</strong> Are my pawns placed on the opposite color of my remaining Bishop?</li>
+                        </ol>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400">
+                        Source: Chess Fundamentals, Part I
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Simplification Logic</span>
+                            <span class="text-lg">⚖️</span>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-white mb-2">When to Trade Pieces (and When to Refuse)</h3>
+                        <p class="text-xs text-slate-400 mb-3">Beginners trade pieces randomly because tension feels uncomfortable. Capablanca traded only with concrete purpose:</p>
+                        <ul class="space-y-2.5 text-xs sm:text-sm text-slate-200">
+                            <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>Trade Major Pieces</strong> when you are ahead in material or when your opponent has a fractured pawn structure (more pawn islands) that is easier to attack without Queens on the board.</span></li>
+                            <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>Eliminate the Defender:</strong> Trade off your opponent's only active piece or the piece guarding weak squares.</span></li>
+                            <li class="flex items-start gap-2"><span class="text-rose-400 font-bold">✗</span> <span><strong>Never Trade Pawns</strong> when you are behind in material! Wait to trade pieces when behind, and trade pawns when fighting for a draw.</span></li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400">
+                        Principle: Petit Combinations & Simplification
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">Endgame Axioms</span>
+                            <span class="text-lg">♜</span>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-white mb-2">Rook & King Endgame Rules of Thumb</h3>
+                        <p class="text-xs text-slate-400 mb-3">Capablanca was the greatest Rook endgame player in history. Memorize these four iron laws:</p>
+                        <ul class="space-y-2.5 text-xs sm:text-sm text-slate-200">
+                            <li><strong class="text-sky-300">1. Initiative Over Material:</strong> In Rook endings, an active Rook on the 7th rank + an active central King is worth 1 to 2 pawns more than a passive Rook defending pawns.</li>
+                            <li><strong class="text-sky-300">2. Cut Off the Enemy King:</strong> Use your Rook along a file or rank to build an invisible barrier preventing the opposing King from approaching the action.</li>
+                            <li><strong class="text-sky-300">3. Rooks Belong Behind Passed Pawns:</strong> Whether yours or your opponent's—their scope increases as the pawn advances.</li>
+                            <li><strong class="text-sky-300">4. Advance King & Pawn Together:</strong> Never push pawns prematurely without your King in support.</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400">
+                        Illustrated in: Capablanca–Tartakower, NY 1924
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">Minor Piece Mastery</span>
+                            <span class="text-lg">♞</span>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-white mb-2">Capablanca's Theorem of Bishop & Pawns</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                            Capablanca formulated one of the clearest positional rules in chess literature regarding minor pieces:
+                        </p>
+                        <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-200 space-y-2">
+                            <p><strong>When YOU have a Bishop:</strong> Keep your pawns on squares of the <em>opposite color</em> of your Bishop so the diagonals remain open and unobstructed.</p>
+                            <p><strong>When YOUR OPPONENT has a Bishop:</strong> Force or fix your pawns (and theirs!) onto squares of the <em>same color</em> as their Bishop to turn it into a "tall pawn," while anchoring your Knight on an unassailable outpost of the opposite color.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400">
+                        Source: Chess Fundamentals, Section 11
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">Pawn Islands</span>
+                            <span class="text-lg">⛓️</span>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-white mb-2">Pawn Structure & Majority Creation</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                            Every disconnected group of pawns is a "pawn island" whose base requires piece protection.
+                        </p>
+                        <ul class="space-y-2 text-xs text-slate-200">
+                            <li>• <strong>Fewer Islands = Healthier Structure:</strong> A compact 2-island formation (e.g., a-b-c and f-g-h) is superior to 3 or 4 scattered islands.</li>
+                            <li>• <strong>Mobile Queenside Majority:</strong> In Capablanca vs. Marshall (1909), Marshall had a 4-vs-3 queenside pawn majority but failed to advance it. Capablanca demonstrated that a healthy pawn majority must be mobilized to create a passed pawn while restraining the opponent's majority.</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400">
+                        Illustrated in: Module 2 & Module 3
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">Calculation Discipline</span>
+                            <span class="text-lg">🔍</span>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-white mb-2">"La Petite Combinaison" (The Little Combination)</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                            Capablanca rarely needed wild 12-move sacrifices because he chained together short, concrete 2-to-3 move tactical sequences ("petite combinations") that transformed one small advantage into another:
+                        </p>
+                        <p class="text-xs text-slate-200 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            Instead of hunting for checkmate from move 15, look for a 3-move sequence that trades off your bad Bishop for their good Knight, wins control of the single open c-file, or forces a permanent backward pawn on d6.
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400">
+                        Jump to Module 2.2 to practice this live
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        /***********************************************************************
+         * 1. CRISP STAUNTON 2D SVG VECTOR PIECE DEFINITIONS
+         ***********************************************************************/
+        const PIECE_SVGS = {
+            wP: `<svg viewBox="0 0 45 45" class="piece-svg"><path d="M 22.5,9 C 19.5,9 17,11.5 17,14.5 C 17,16.8 18.4,18.7 20.4,19.5 C 17,21 15,24.5 15,29 L 30,29 C 30,24.5 28,21 24.6,19.5 C 26.6,18.7 28,16.8 28,14.5 C 28,11.5 25.5,9 22.5,9 z M 11.5,37 L 33.5,37 C 33.5,33 30,31 22.5,31 C 15,31 11.5,33 11.5,37 z" fill="#ffffff" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/></svg>`,
+            bP: `<svg viewBox="0 0 45 45" class="piece-svg"><path d="M 22.5,9 C 19.5,9 17,11.5 17,14.5 C 17,16.8 18.4,18.7 20.4,19.5 C 17,21 15,24.5 15,29 L 30,29 C 30,24.5 28,21 24.6,19.5 C 26.6,18.7 28,16.8 28,14.5 C 28,11.5 25.5,9 22.5,9 z M 11.5,37 L 33.5,37 C 33.5,33 30,31 22.5,31 C 15,31 11.5,33 11.5,37 z" fill="#1e293b" stroke="#f8fafc" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+            wR: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#ffffff" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14"/><path d="M 34,14 L 31,17 L 14,17 L 11,14"/><path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17"/><path d="M 14,29.5 L 12,32 L 33,32 L 31,29.5"/></g></svg>`,
+            bR: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#1e293b" stroke="#f8fafc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14"/><path d="M 34,14 L 31,17 L 14,17 L 11,14"/><path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17"/><path d="M 14,29.5 L 12,32 L 33,32 L 31,29.5"/></g></svg>`,
+            wN: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#ffffff" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18"/><path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10"/><circle cx="15.5" cy="14.5" r="1" fill="#1e293b"/></g></svg>`,
+            bN: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#1e293b" stroke="#f8fafc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18"/><path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10"/><circle cx="15.5" cy="14.5" r="1" fill="#f8fafc"/></g></svg>`,
+            wB: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#ffffff" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 z"/><path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/><circle cx="22.5" cy="8" r="2"/></g></svg>`,
+            bB: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#1e293b" stroke="#f8fafc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 z"/><path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/><circle cx="22.5" cy="8" r="2"/></g></svg>`,
+            wQ: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#ffffff" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/><path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/><circle cx="6" cy="12" r="1.8"/><circle cx="14" cy="9" r="1.8"/><circle cx="22.5" cy="8" r="1.8"/><circle cx="31" cy="9" r="1.8"/><circle cx="39" cy="12" r="1.8"/></g></svg>`,
+            bQ: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#1e293b" stroke="#f8fafc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/><path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/><circle cx="6" cy="12" r="1.8"/><circle cx="14" cy="9" r="1.8"/><circle cx="22.5" cy="8" r="1.8"/><circle cx="31" cy="9" r="1.8"/><circle cx="39" cy="12" r="1.8"/></g></svg>`,
+            wK: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#ffffff" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 22.5,11.63 L 22.5,6"/><path d="M 20,8 L 25,8"/><path d="M 22.5,25 C 22.5,25 27,17.5 25.5,14.5 C 25.5,14.5 24.5,12 22.5,12 C 20.5,12 19.5,14.5 19.5,14.5 C 18,17.5 22.5,25 22.5,25"/><path d="M 11.5,37 C 17,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19.5 C 34.5,13 25,16 22.5,23.5 L 22.5,27 L 22.5,23.5 C 19,16 9.5,13 6.5,19.5 C 3.5,25.5 11.5,29.5 11.5,29.5 L 11.5,37 z"/></g></svg>`,
+            bK: `<svg viewBox="0 0 45 45" class="piece-svg"><g fill="#1e293b" stroke="#f8fafc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M 22.5,11.63 L 22.5,6"/><path d="M 20,8 L 25,8"/><path d="M 22.5,25 C 22.5,25 27,17.5 25.5,14.5 C 25.5,14.5 24.5,12 22.5,12 C 20.5,12 19.5,14.5 19.5,14.5 C 18,17.5 22.5,25 22.5,25"/><path d="M 11.5,37 C 17,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19.5 C 34.5,13 25,16 22.5,23.5 L 22.5,27 L 22.5,23.5 C 19,16 9.5,13 6.5,19.5 C 3.5,25.5 11.5,29.5 11.5,29.5 L 11.5,37 z"/></g></svg>`
+        };
+
+        /***********************************************************************
+         * 2. STRUCTURED CAPABLANCA CURRICULUM & ANNOTATED MASTERPIECES
+         ***********************************************************************/
+        const CURRICULUM_MODULES = [
+            {
+                moduleId: "mod1",
+                moduleTitle: "Module 1: Endgame First",
+                lessons: [
+                    {
+                        id: "1.1",
+                        badge: "Lesson 1.1",
+                        category: "Module 1: Endgame First",
+                        title: "Direct Opposition & The Rule of the Square",
+                        quote: "\"In order to improve your game, you must study the endgame before everything else; for whereas the endings can be studied and mastered by themselves, the middle game and the opening must be studied in relation to the endgame.\"",
+                        theory: `
+                            <p>In <em>Chess Fundamentals</em>, Capablanca begins not with the Ruy Lopez, but with basic endings. Two concepts govern all King and Pawn endings:</p>
+                            <p><strong>1. Direct Opposition:</strong> When Kings stand on the same file or rank separated by one square, the player <em>not</em> having to move holds the opposition, forcing the rival King to give way.</p>
+                            <p><strong>2. Rule of the Square:</strong> Draw a diagonal from a passed pawn to the promotion rank to form a square. If the defending King cannot step inside that square on its turn, the pawn promotes unaided.</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "4k3/8/8/4P3/4K3/8/8/8 w - - 0 1",
+                                prompt: "Step 1/3: Your pawn is on e5, but advancing it immediately allows ...Ke7 blockading it. Seize the 6th rank in front of your pawn!",
+                                expectedMove: { from: "e4", to: "d5" },
+                                altMoves: [{ from: "e4", to: "f5" }],
+                                autoReply: { from: "e8", to: "d7" },
+                                hintSquare: "d5",
+                                hintText: "Advance your King in front of the pawn (Kd5 or Kf5) to outflank the Black King. Never push the pawn prematurely!",
+                                wrongFeedback: {
+                                    "e5-e6": "Pushing e6 prematurely is a classic beginner blunder! After 1.e6? Ke7 2.Ke5 Ke8, Black takes the opposition and draws easily. Always lead with the King."
+                                },
+                                successFeedback: "Excellent! By playing Kd5, your King leads the pawn. Black responds ...Kd7 to contest the advance.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "d5", color: "emerald", label: "Key Outflank" },
+                                        { sq: "f5", color: "emerald", label: "Key Outflank" }
+                                    ],
+                                    arrows: [
+                                        { from: "e4", to: "d5", color: "emerald" },
+                                        { from: "e5", to: "e8", color: "amber" }
+                                    ]
+                                }
+                            },
+                            {
+                                fen: "8/3k4/8/3KP3/8/8/8/8 w - - 2 2",
+                                prompt: "Step 2/3: Black played ...Kd7, taking opposition. How do we use our reserve tempo with the pawn to control the queening square?",
+                                expectedMove: { from: "e5", to: "e6" },
+                                autoReply: { from: "d7", to: "e7" },
+                                hintSquare: "e6",
+                                hintText: "Now that your King is on the 5th rank ahead of the pawn, advancing e6+ forces Black's King backward.",
+                                successFeedback: "Spot on! 2.e6+ forces Black to retreat to e7, yielding the critical 6th rank squares.",
+                                annotations: {
+                                    zones: [{ sq: "e6", color: "emerald", label: "Tempo Check" }],
+                                    arrows: [{ from: "e5", to: "e6", color: "emerald" }]
+                                }
+                            },
+                            {
+                                fen: "8/4k3/4P3/3K4/8/8/8/8 w - - 1 3",
+                                prompt: "Step 3/3: Black retreated to e7. Seize Direct Opposition on the 6th rank to force Black away from the e8 promotion square!",
+                                expectedMove: { from: "d5", to: "e5" },
+                                autoReply: null,
+                                hintSquare: "e5",
+                                hintText: "Step directly in front of the Black King (Ke5) with one square between you.",
+                                successFeedback: "Mastered! 3.Ke5! seizes direct opposition. Whether Black goes to d8 or f8, your King steps to f7 or d7, escorting the e-pawn to e8=Q.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "e5", color: "emerald", label: "Opposition" },
+                                        { sq: "e7", color: "rose", label: "Zugzwang" }
+                                    ],
+                                    arrows: [
+                                        { from: "d5", to: "e5", color: "emerald" },
+                                        { from: "e5", to: "e7", color: "amber" }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: "1.2",
+                        badge: "Lesson 1.2",
+                        category: "Module 1: Endgame First",
+                        title: "The Lucena Position: Building the Bridge",
+                        quote: "\"Rook and Pawn endings are the most frequent on the chessboard, yet very few players have mastered their fundamental positions.\"",
+                        theory: `
+                            <p>When your pawn reaches the 7th rank with your King in front of it and the enemy King cut off, how do you force your King out to promote without getting checked forever from behind?</p>
+                            <p>Capablanca highlights the <strong>Lucena Method ("Building a Bridge")</strong>: First, lift your Rook to the <strong>4th rank</strong>! Then march your King out toward the enemy Rook. On the 4th check, your Rook interposes on the 4th rank, shielding your King and forcing promotion.</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1",
+                                prompt: "Step 1/3: Your King is trapped on b8 in front of the b7 pawn. If you step out immediately (1.Kb7?), Black checks endlessly. Prepare the 'Bridge' on the 4th rank!",
+                                expectedMove: { from: "c1", to: "c4" },
+                                autoReply: { from: "a2", to: "a1" },
+                                hintSquare: "c4",
+                                hintText: "Move your Rook along the c-file to the 4th rank (Rc4) so it can later interpose on b4.",
+                                wrongFeedback: {
+                                    "b8-a7": "1.Ka7? allows 1...Ra1+ 2.Kb6 Rb1+ and you have no shield on the b-file! Always place the Rook on the 4th rank first."
+                                },
+                                successFeedback: "Brilliant preparation! 1.Rc4! sets up the bridge on the 4th rank while keeping Black's King cut off on the d-file. Black plays a waiting move 1...Ra1.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "c4", color: "emerald", label: "4th Rank Bridge" },
+                                        { sq: "b4", color: "amber", label: "Future Shield" }
+                                    ],
+                                    arrows: [
+                                        { from: "c1", to: "c4", color: "emerald" },
+                                        { from: "c4", to: "c8", color: "amber" }
+                                    ]
+                                }
+                            },
+                            {
+                                fen: "1K1k4/1P6/8/8/2R5/8/8/r7 w - - 2 2",
+                                prompt: "Step 2/3: Now that your Rook stands on the 4th rank, free your King from b8 so the pawn can promote!",
+                                expectedMove: { from: "b8", to: "a7" },
+                                autoReply: { from: "a1", to: "a2" },
+                                hintSquare: "a7",
+                                hintText: "Step your King out to a7 (Ka7). Black will check you, and we will walk down toward our bridge.",
+                                successFeedback: "Correct! 2.Ka7! clears b8 for promotion. Black begins checking from behind with 2...Ra2+.",
+                                annotations: {
+                                    zones: [{ sq: "a7", color: "emerald", label: "Clear b8" }],
+                                    arrows: [{ from: "b8", to: "a7", color: "emerald" }]
+                                }
+                            },
+                            {
+                                fen: "3k4/KP6/8/8/2R5/8/r7/8 w - - 4 3",
+                                prompt: "Step 3/3: After 2...Ra2+ 3.Kb6 Rb2+ 4.Ka6 Ra2+ 5.Kb5 Rb2+, imagine we are on the key check—start the zig-zag walk toward the Rook by stepping to b6!",
+                                expectedMove: { from: "a7", to: "b6" },
+                                autoReply: null,
+                                hintSquare: "b6",
+                                hintText: "Step to b6 (Kb6) approaching the checking Rook and preparing Rb4.",
+                                successFeedback: "Lucena Mastered! After 3.Kb6 Rb2+ 4.Rb4! (the Bridge), Black's checks are exhausted and b8=Q is unstoppable.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "b6", color: "emerald", label: "Zig-Zag" },
+                                        { sq: "b4", color: "amber", label: "Bridge Square" }
+                                    ],
+                                    arrows: [
+                                        { from: "a7", to: "b6", color: "emerald" },
+                                        { from: "c4", to: "b4", color: "amber" }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: "1.3",
+                        badge: "Lesson 1.3",
+                        category: "Module 1: Endgame First",
+                        title: "Rook on the 7th & Active King (Capablanca–Tartakower, NY 1924)",
+                        quote: "\"In Rook endings, activity of the Rook and King is worth far more than a temporary pawn sacrifice.\"",
+                        theory: `
+                            <p>New York 1924 contains the most famous Rook endgame ever played. On move 35, Tartakower threatened to win Capablanca's c3-pawn with check. A beginner retreats to defend the pawn passively.</p>
+                            <p>Capablanca instead sacrificed two pawns to accomplish two supreme endgame goals: <strong>keep his Rook dominating the 7th rank</strong> and <strong>march his King deep into f6</strong> to weave a mating net and escort his g-pawn.</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "4k3/R6p/5pp1/2r5/5P2/2P3P1/7P/6K1 w - - 0 35",
+                                prompt: "Step 1/3 (Move 35): Black's Rook on c5 attacks your c3-pawn. Instead of passive defense (Ra3?), how did Capablanca activate his greatest endgame weapon?",
+                                expectedMove: { from: "g1", to: "g2" },
+                                altMoves: [{ from: "g1", to: "f2" }],
+                                autoReply: { from: "c5", to: "c3" },
+                                hintSquare: "g2",
+                                hintText: "Ignore the c3-pawn! March your King toward the center and kingside via Kg2 (or Kf2).",
+                                wrongFeedback: {
+                                    "a7-a3": "35.Ra3? saves the c3-pawn, but surrenders the 7th rank! Black activates his King and draws comfortably. Never make your Rook passive in an endgame."
+                                },
+                                successFeedback: "Pure Capablanca! 35.Kg2!! sacrifices the c3-pawn to keep the Rook on the 7th rank while starting the historic King march to f6. Black captures 35...Rxc3.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "a7", color: "emerald", label: "Dominant 7th Rank" },
+                                        { sq: "c3", color: "rose", label: "Ignore Pawn" }
+                                    ],
+                                    arrows: [
+                                        { from: "g1", to: "g2", color: "emerald" },
+                                        { from: "a7", to: "h7", color: "amber" }
+                                    ]
+                                }
+                            },
+                            {
+                                fen: "4k3/R6p/5pp1/8/5P2/2r3P1/6KP/8 w - - 0 36",
+                                prompt: "Step 2/3 (Move 36): Black grabbed the pawn with 35...Rxc3 and now eyes h2. Continue the fearless King penetration up the board!",
+                                expectedMove: { from: "g2", to: "h3" },
+                                autoReply: { from: "c3", to: "c2" },
+                                hintSquare: "h3",
+                                hintText: "Advance Kh3! Prepare to walk via h4-g5-f6 right into Black's camp.",
+                                successFeedback: "Tremendous! 36.Kh3! continues the march. Black plays 36...Rc2 attacking h2, still oblivious to the danger of White's King invading f6.",
+                                annotations: {
+                                    zones: [{ sq: "h3", color: "emerald", label: "King March" }],
+                                    arrows: [
+                                        { from: "g2", to: "h3", color: "emerald" },
+                                        { from: "h3", to: "f6", color: "amber" }
+                                    ]
+                                }
+                            },
+                            {
+                                fen: "5k2/2R4p/5K2/5P2/6P1/7P/8/2r5 w - - 1 42",
+                                prompt: "Step 3/3 (Move 42): Six moves later, Capablanca's King has reached f6! Black is in a mating net on f8. Deliver the decisive blow that forces a winning passed pawn!",
+                                expectedMove: { from: "g4", to: "g5" },
+                                autoReply: null,
+                                hintSquare: "g5",
+                                hintText: "Push g5! Black cannot stop Rg7 and the creation of a lethal passed pawn because his King is boxed in by your King on f6.",
+                                successFeedback: "Immortal Endgame Complete! 42.g5! leaves Tartakower helpless against the threat of Rc8# and g6. Activity triumphed over two sacrificed pawns.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "f6", color: "emerald", label: "Dominant King" },
+                                        { sq: "f8", color: "rose", label: "Mating Net" }
+                                    ],
+                                    arrows: [
+                                        { from: "g4", to: "g5", color: "emerald" },
+                                        { from: "c7", to: "c8", color: "amber" }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                moduleId: "mod2",
+                moduleTitle: "Module 2: Positional Clarity & Petite Combinations",
+                lessons: [
+                    {
+                        id: "2.1",
+                        badge: "Lesson 2.1",
+                        category: "Module 2: Positional Clarity",
+                        title: "Good Knight vs. Bad Bishop & Color Complexes",
+                        quote: "\"When the opponent has a Bishop, keep his pawns fixed on squares of the same color as his Bishop; meanwhile anchor your Knight on an outpost of the opposite color.\"",
+                        theory: `
+                            <p>A Bishop is only as good as the openness of its diagonals. When all central pawns are locked on light squares, a light-squared Bishop becomes a <strong>"Bad Bishop"</strong>—merely a tall pawn bumping into its own foot soldiers.</p>
+                            <p>Meanwhile, a <strong>Knight anchored on a central dark square (e5 or c5)</strong> cannot be challenged by the enemy Bishop and radiates power into both flanks.</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "2b3k1/pp3ppp/2p1p3/4P3/1P1P4/P2N4/5PPP/6K1 w - - 0 1",
+                                prompt: "Step 1/2: Notice how Black's pawns on c6 and e6 are fixed on light squares, entombing Black's c8-Bishop. Maneuver your Knight toward the unassailable dark-square outpost on c5!",
+                                expectedMove: { from: "d3", to: "c5" },
+                                autoReply: { from: "g8", to: "f8" },
+                                hintSquare: "c5",
+                                hintText: "Plant your Knight on the dark-squared hole at c5 (Nc5), where no Black pawn or Bishop can ever attack it.",
+                                successFeedback: "Textbook positional play! 1.Nc5! establishes an octopus Knight on a dark square. Black's light-squared Bishop on c8 has zero legal moves!",
+                                annotations: {
+                                    zones: [
+                                        { sq: "c5", color: "emerald", label: "Eternal Outpost" },
+                                        { sq: "c8", color: "rose", label: "Bad Bishop" },
+                                        { sq: "c6", color: "amber", label: "Fixed Pawn" },
+                                        { sq: "e6", color: "amber", label: "Fixed Pawn" }
+                                    ],
+                                    arrows: [{ from: "d3", to: "c5", color: "emerald" }]
+                                }
+                            },
+                            {
+                                fen: "2b2k2/pp3ppp/2p1p3/2N1P3/1P1P4/P7/5PPP/6K1 w - - 2 2",
+                                prompt: "Step 2/2: Black wants to play ...b6 to kick your Knight off c5. Apply Capablanca's principle: permanently fix Black's queenside pawns on light squares!",
+                                expectedMove: { from: "a3", to: "a4" },
+                                altMoves: [{ from: "b4", to: "b5" }],
+                                autoReply: null,
+                                hintSquare: "a4",
+                                hintText: "Advance a4 (or b5) to clamp down on the queenside so Black can never free the c8-Bishop.",
+                                successFeedback: "Complete positional stranglehold! By clamping down on the queenside, White effectively plays a full piece up because the c8-Bishop is permanently entombed.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "c5", color: "emerald", label: "Anchored Knight" },
+                                        { sq: "b6", color: "amber", label: "Prevent ...b6" }
+                                    ],
+                                    arrows: [{ from: "a3", to: "a4", color: "emerald" }]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: "2.2",
+                        badge: "Lesson 2.2",
+                        category: "Module 2: Positional Clarity",
+                        title: "La Petite Combinaison & Simplification to Win",
+                        quote: "\"Simplification is the most powerful weapon when you possess a permanent structural advantage.\"",
+                        theory: `
+                            <p>Capablanca was famous for <em>"la petite combinaison"</em>—a short, forcing 2-to-3 move sequence that trades off active enemy pieces to leave a technically winning endgame.</p>
+                            <p>In this classic Capablanca motif, Black suffers from <strong>3 weak pawn islands</strong> (isolated a6 and c6 pawns), whereas White has a compact structure. If we force off the Rooks and minor pieces, Black's weak pawns will fall like ripe fruit to our King.</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "2r3k1/5ppp/p1p1bn2/8/1PB5/P3PN2/5PPP/2R3K1 w - - 0 1",
+                                prompt: "Step 1/2: Black's a6 and c6 pawns are weak islands, defended only by the e6-Bishop and c8-Rook. Initiate a 'Petite Combination' by eliminating Black's key defender!",
+                                expectedMove: { from: "c4", to: "e6" },
+                                autoReply: { from: "f7", to: "e6" },
+                                hintSquare: "e6",
+                                hintText: "Capture the Bishop on e6 (Bxe6). This shatters Black's kingside pawns AND removes the guard of the c6 pawn and d4 outpost.",
+                                successFeedback: "Sharp clarity! 1.Bxe6! fxe6 gives Black a fourth weak pawn on e6 and leaves the dark squares undefended.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "e6", color: "emerald", label: "Key Defender" },
+                                        { sq: "a6", color: "rose", label: "Weak Island" },
+                                        { sq: "c6", color: "rose", label: "Weak Island" }
+                                    ],
+                                    arrows: [{ from: "c4", to: "e6", color: "emerald" }]
+                                }
+                            },
+                            {
+                                fen: "2r3k1/6pp/p1p1pn2/8/1P6/P3PN2/5PPP/2R3K1 w - - 0 2",
+                                prompt: "Step 2/2: Now leap into the central dark-square hole with a double fork against Black's weak e6 and c6 pawns!",
+                                expectedMove: { from: "f3", to: "d4" },
+                                autoReply: null,
+                                hintSquare: "d4",
+                                hintText: "Play Nd4, simultaneously attacking both the e6 and c6 isolated pawns.",
+                                successFeedback: "That is 'La Petite Combinaison'! 2.Nd4! forks e6 and c6. No complex 10-move sacrifice was needed—just two clean moves transforming structure into material.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "d4", color: "emerald", label: "Fork Outpost" },
+                                        { sq: "c6", color: "rose", label: "Target 1" },
+                                        { sq: "e6", color: "rose", label: "Target 2" }
+                                    ],
+                                    arrows: [
+                                        { from: "f3", to: "d4", color: "emerald" },
+                                        { from: "d4", to: "c6", color: "amber" },
+                                        { from: "d4", to: "e6", color: "amber" }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: "2.3",
+                        badge: "Lesson 2.3",
+                        category: "Module 2: Positional Clarity",
+                        title: "Prophylaxis & Neutralizing Counterplay",
+                        quote: "\"Before launching your own attack or cashing in a pawn, ask how your opponent intends to get active—and extinguish that hope.\"",
+                        theory: `
+                            <p>Many club players lose won positions because they grab a non-essential pawn while allowing the opponent's Rook or Knight to become wildly active.</p>
+                            <p>Capablanca practiced relentless <strong>prophylaxis</strong>: restricting the opponent's pieces and sealing off counterplay before executing the final blow.</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "6k1/5ppp/8/1p1p4/3P4/2P2N2/r4PPP/3R2K1 w - - 0 1",
+                                prompt: "Step 1/2: Black's Rook has invaded the 2nd rank (a2) and threatens ...Rc2 winning your c3-pawn and getting fierce counterplay. What is the calm, prophylactic move?",
+                                expectedMove: { from: "d1", to: "c1" },
+                                autoReply: { from: "f7", to: "f6" },
+                                hintSquare: "c1",
+                                hintText: "Play Rc1! Protect c3 and prepare to challenge or trap Black's active Rook before doing anything else.",
+                                wrongFeedback: {
+                                    "f3-e5": "1.Ne5? looks active, but allows 1...Rc2! winning your c3-pawn and activating Black's Rook behind your lines. Prophylaxis comes before ambition!"
+                                },
+                                successFeedback: "Calm and clinical! 1.Rc1! neutralizes Black's only source of counterplay (...Rc2) while preparing Ne1-d3-b4.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "c1", color: "emerald", label: "Prophylaxis" },
+                                        { sq: "c2", color: "rose", label: "Deny Invasion" }
+                                    ],
+                                    arrows: [
+                                        { from: "d1", to: "c1", color: "emerald" },
+                                        { from: "a2", to: "c2", color: "rose" }
+                                    ]
+                                }
+                            },
+                            {
+                                fen: "6k1/6pp/5p2/1p1p4/3P4/2P2N2/r4PPP/2R3K1 w - - 0 2",
+                                prompt: "Step 2/2: Now evict Black's Rook from your 2nd rank while rerouting your Knight toward the c5/b4 dark squares!",
+                                expectedMove: { from: "f3", to: "e1" },
+                                autoReply: null,
+                                hintSquare: "e1",
+                                hintText: "Retreat Ne1! It guards c2, prepares Nd3-c5, and deprives Black's Rook on a2 of any targets.",
+                                successFeedback: "Prophylaxis mastered! 2.Ne1! covers c2, frees the c1-Rook, and sends the Knight to d3-c5 where it dominates the board.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "e1", color: "emerald", label: "Reroute & Guard" },
+                                        { sq: "c5", color: "amber", label: "Future Outpost" }
+                                    ],
+                                    arrows: [
+                                        { from: "f3", to: "e1", color: "emerald" },
+                                        { from: "e1", to: "d3", color: "amber" },
+                                        { from: "d3", to: "c5", color: "amber" }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                moduleId: "mod3",
+                moduleTitle: "Module 3: Annotated Masterpiece ('Guess the Move')",
+                lessons: [
+                    {
+                        id: "3.1",
+                        badge: "Masterpiece 3.1",
+                        category: "Module 3: Guess the Move",
+                        title: "Capablanca vs. Frank Marshall (Match, Game 23, 1909)",
+                        quote: "\"A pawn majority must be advanced. If you fail to advance your majority, your opponent will advance theirs and crush you.\"",
+                        theory: `
+                            <p>At age 20, Capablanca crushed U.S. Champion Frank Marshall (+8 -1 =14). In the decisive 23rd game, symmetrical pawn majorities arose: White had 4-vs-3 on the queenside; Black had 4-vs-3 on the kingside.</p>
+                            <p>Step into Capablanca's shoes at three critical turning points and find the moves that made chess history.</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "2r2rk1/pp2ppbp/6p1/q2P4/8/2N1B3/PP2BPPP/R2Q1RK1 w - - 0 14",
+                                prompt: "Decision 1/3: Black's Queen on a5 eyes your queenside and d5-pawn. Find Capablanca's multi-purpose move that defends c3/a2, eyes the b7-pawn, and prepares to trade off Black's proud fianchettoed Bishop!",
+                                expectedMove: { from: "e3", to: "d4" },
+                                altMoves: [{ from: "d1", to: "b3" }],
+                                autoReply: { from: "g7", to: "d4" },
+                                hintSquare: "d4",
+                                hintText: "Centralize your Bishop on d4 (Bd4)! Opposing the g7-Bishop eliminates Black's strongest defensive piece.",
+                                successFeedback: "Grandmaster vision! 14.Bd4! neutralizes Black's dark-squared Bishop and centralizes White's forces.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "d4", color: "emerald", label: "Centralize & Trade" },
+                                        { sq: "g7", color: "amber", label: "Opposing Bishop" }
+                                    ],
+                                    arrows: [{ from: "e3", to: "d4", color: "emerald" }]
+                                }
+                            },
+                            {
+                                fen: "2r3k1/pp3p1p/4p1p1/8/1P6/P4B2/5PPP/2R2RK1 w - - 0 22",
+                                prompt: "Decision 2/3: Queens have been traded and White has mobilized the 4-vs-3 queenside majority (a3, b4 vs a7, b7). Seize total command of the open c-file and the 7th rank!",
+                                expectedMove: { from: "c1", to: "c7" },
+                                autoReply: { from: "c8", to: "c7" },
+                                hintSquare: "c7",
+                                hintText: "Invade the 7th rank immediately with Rc7! Notice how the f1-Rook is ready to recapture on c7.",
+                                successFeedback: "Clinical! 22.Rc7! forces Black to trade Rooks (22...Rxc7) or lose the b7-pawn, handing White's second Rook undisputed ownership of the 7th rank.",
+                                annotations: {
+                                    zones: [{ sq: "c7", color: "emerald", label: "7th Rank Invasion" }],
+                                    arrows: [
+                                        { from: "c1", to: "c7", color: "emerald" },
+                                        { from: "f1", to: "c1", color: "amber" }
+                                    ]
+                                }
+                            },
+                            {
+                                fen: "6k1/ppr2p1p/4p1p1/8/1P6/P4B2/5PPP/5RK1 w - - 0 23",
+                                prompt: "Decision 3/3: Black captured 22...Rxc7. Complete the battery replacement to pin Black to the back rank and create an unstoppable passed b-pawn!",
+                                expectedMove: { from: "f1", to: "c1" },
+                                autoReply: null,
+                                hintSquare: "c1",
+                                hintText: "Recapture on c1 (Rfc1)! Your Rook reclaims the 7th rank on the next move.",
+                                successFeedback: "Masterpiece Completed! After 23.Rfc1! Rxc1+ 24.Rxc1, Capablanca invaded c7, advanced b5-b6, and marched his passed pawn to victory.",
+                                annotations: {
+                                    zones: [
+                                        { sq: "c1", color: "emerald", label: "Reclaim Open File" },
+                                        { sq: "c7", color: "amber", label: "Target 7th Rank" }
+                                    ],
+                                    arrows: [{ from: "f1", to: "c1", color: "emerald" }]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: "3.2",
+                        badge: "Masterpiece 3.2",
+                        category: "Module 3: Guess the Move",
+                        title: "Nimzowitsch vs. Capablanca (New York, 1927) — Playing as White Model",
+                        quote: "\"Two Rooks doubled on the 7th rank, combined with control of the only open file, paralyze any defense.\"",
+                        theory: `
+                            <p>In New York 1927, Capablanca demonstrated the ultimate power of <strong>open-file control and 7th-rank penetration</strong> against Aron Nimzowitsch (here flipped to White so you can play Capablanca's attacking moves from the bottom).</p>
+                        `,
+                        steps: [
+                            {
+                                fen: "3r2k1/p4ppp/1p2p3/8/3P4/1P2P3/P1R2PPP/2R3K1 w - - 0 1",
+                                prompt: "Step 1/2: You have doubled Rooks on the open c-file. Penetrate to the 7th rank immediately before Black can challenge the file!",
+                                expectedMove: { from: "c2", to: "c7" },
+                                autoReply: { from: "d8", to: "a8" },
+                                hintSquare: "c7",
+                                hintText: "Play Rc7! Attacking a7 and f7 simultaneously while tying down Black's Rook.",
+                                successFeedback: "Dominant! 1.Rc7! forces Black's Rook into ultra-passive defense of the a7-pawn (1...Ra8).",
+                                annotations: {
+                                    zones: [
+                                        { sq: "c7", color: "emerald", label: "Absolute 7th" },
+                                        { sq: "a7", color: "rose", label: "Target" },
+                                        { sq: "f7", color: "rose", label: "Target" }
+                                    ],
+                                    arrows: [{ from: "c2", to: "c7", color: "emerald" }]
+                                }
+                            },
+                            {
+                                fen: "r5k1/p1R2ppp/1p2p3/8/3P4/1P2P3/P4PPP/2R3K1 w - - 1 2",
+                                prompt: "Step 2/2: Black played ...Ra8 to guard a7, leaving his back rank weak. Create breathing room (luft) or threaten the back-rank mate / 7th-rank pig-roast!",
+                                expectedMove: { from: "c1", to: "c6" },
+                                altMoves: [{ from: "g2", to: "g3" }, { from: "h2", to: "h3" }],
+                                autoReply: null,
+                                hintSquare: "c6",
+                                hintText: "Lift your second Rook to c6 (Rc6) or create luft (g3/h3) preparing Rcc7 ('Pigs on the 7th').",
+                                successFeedback: "Total paralysis! With both Rooks invading the 6th and 7th ranks, the opponent is reduced to waiting while your King marches up the board.",
+                                annotations: {
+                                    zones: [{ sq: "c6", color: "emerald", label: "Double Battery" }],
+                                    arrows: [{ from: "c1", to: "c6", color: "emerald" }]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
         ];
-        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), mat);
-        group.add(body);
-      } else if (type === 'r') {
-        const pts = [
-          ...basePoints,
-          new THREE.Vector2(0.26, 0.95),
-          new THREE.Vector2(0.34, 1.05),
-          new THREE.Vector2(0.34, 1.25),
-          new THREE.Vector2(0, 1.25)
+
+        /***********************************************************************
+         * 3. LIVE POSITIONAL SPARRING SCENARIOS (HEURISTIC ENGINE + 5 METRICS)
+         ***********************************************************************/
+        const SPARRING_SCENARIOS = [
+            {
+                id: "spar-1",
+                badge: "Sparring Drill 1",
+                category: "Positional Sparring Mode",
+                title: "Convert the Queenside Majority Endgame",
+                quote: "\"Do not hurry, but mobilize your King and healthy pawn majority methodically.\"",
+                fen: "6k1/5ppp/4p3/8/1PP5/P3P3/5PPP/6K1 w - - 0 1",
+                theory: `
+                    <p><strong>Live Sparring Mode:</strong> You are playing White against the Heuristic Sparring Partner. You have a clean 3-vs-0 queenside majority while Black has a 4-vs-3 kingside majority.</p>
+                    <p>Every move you make is evaluated in real time across the <strong>5 Capablanca Metrics</strong>. Centralize your King first, restrict Black's e5 break, and create a passed queenside pawn!</p>
+                `,
+                prompt: "Play freely against the AI! Centralize your King (Kf1-e2-d3) and mobilize your queenside majority."
+            },
+            {
+                id: "spar-2",
+                badge: "Sparring Drill 2",
+                category: "Positional Sparring Mode",
+                title: "Good Knight vs. Bad Bishop Conversion",
+                quote: "\"Anchor the Knight, activate the King, and squeeze the opponent on both flanks.\"",
+                fen: "2b3k1/pp3ppp/2p1p3/4P3/1P1P4/P2N4/5PPP/6K1 w - - 0 1",
+                theory: `
+                    <p><strong>Live Sparring Mode:</strong> Convert this classic Good Knight vs. Bad Bishop endgame against the engine. Anchor your Knight on c5, bring your King to d3/e3, and watch your 5 Capablanca Metrics climb as you squeeze Black's position.</p>
+                `,
+                prompt: "Play freely against the AI! Outpost your Knight on c5 and march your King into the center."
+            },
+            {
+                id: "spar-3",
+                badge: "Sparring Drill 3",
+                category: "Positional Sparring Mode",
+                title: "Open File & 7th Rank Rook Sparring",
+                quote: "\"Control the open file, penetrate to the 7th rank, and never trade your active Rook for a passive one.\"",
+                fen: "3r2k1/pp3ppp/2p1p3/8/1P1P4/P3P3/5PPP/2R3K1 w - - 0 1",
+                theory: `
+                    <p><strong>Live Sparring Mode:</strong> You already hold the open c-file! Invade c7, activate your King toward the center, and avoid allowing Black to trade Rooks on the c-file without winning material.</p>
+                `,
+                prompt: "Play freely against the AI! Seize the 7th rank (Rc7) and activate your King."
+            }
         ];
-        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 16), mat);
-        group.add(body);
-        for (let i = 0; i < 6; i++) {
-          const a = (i * Math.PI * 2) / 6;
-          const cren = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.12), mat);
-          cren.position.set(Math.cos(a) * 0.26, 1.31, Math.sin(a) * 0.26);
-          cren.rotation.y = -a;
-          group.add(cren);
-        }
-      } else if (type === 'n') {
-        const base = new THREE.Mesh(new THREE.LatheGeometry(basePoints, 20), mat);
-        group.add(base);
 
-        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 0.65, 12), mat);
-        torso.position.y = 0.58;
-        group.add(torso);
+        /***********************************************************************
+         * 4. APPLICATION STATE & CHESS ENGINE INSTANCE
+         ***********************************************************************/
+        let game = new Chess();
+        let currentMode = 'curriculum'; // 'curriculum' | 'sparring' | 'codex'
+        let currentLesson = CURRICULUM_MODULES[0].lessons[0];
+        let currentStepIndex = 0;
+        let currentSparring = SPARRING_SCENARIOS[0];
 
-        const head = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.58, 6), mat);
-        head.position.set(0, 1.05, 0.12);
-        head.rotation.x = Math.PI * 0.38;
-        group.add(head);
+        let selectedSquare = null;
+        let legalMovesForSelected = [];
+        let lastMoveSquares = [];
+        let showOverlay = true;
+        let completedLessons = new Set();
 
-        const mane = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.55, 0.18), mat);
-        mane.position.set(0, 0.95, -0.1);
-        mane.rotation.x = -0.2;
-        group.add(mane);
+        /***********************************************************************
+         * 5. BOARD COORDINATE & RENDERING ENGINE
+         ***********************************************************************/
+        const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
-        group.rotation.y = color === 'w' ? Math.PI : 0;
-      } else if (type === 'b') {
-        const pts = [
-          ...basePoints,
-          new THREE.Vector2(0.17, 0.82),
-          new THREE.Vector2(0.25, 0.88),
-          new THREE.Vector2(0.24, 1.15),
-          new THREE.Vector2(0.14, 1.38),
-          new THREE.Vector2(0.05, 1.48),
-          new THREE.Vector2(0, 1.54)
-        ];
-        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 20), mat);
-        group.add(body);
-        const orb = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 12), mat);
-        orb.position.y = 1.56;
-        group.add(orb);
-      } else if (type === 'q') {
-        const pts = [
-          ...basePoints,
-          new THREE.Vector2(0.16, 0.95),
-          new THREE.Vector2(0.28, 1.05),
-          new THREE.Vector2(0.18, 1.35),
-          new THREE.Vector2(0.30, 1.58),
-          new THREE.Vector2(0, 1.52)
-        ];
-        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 24), mat);
-        group.add(body);
-        for (let i = 0; i < 8; i++) {
-          const a = (i * Math.PI * 2) / 8;
-          const spike = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 6), mat);
-          spike.position.set(Math.cos(a) * 0.25, 1.66, Math.sin(a) * 0.25);
-          group.add(spike);
-        }
-      } else if (type === 'k') {
-        const pts = [
-          ...basePoints,
-          new THREE.Vector2(0.18, 1.02),
-          new THREE.Vector2(0.30, 1.12),
-          new THREE.Vector2(0.22, 1.45),
-          new THREE.Vector2(0.30, 1.65),
-          new THREE.Vector2(0, 1.65)
-        ];
-        const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 24), mat);
-        group.add(body);
-
-        const vBar = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.30, 0.08), mat);
-        vBar.position.y = 1.80;
-        const hBar = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.08), mat);
-        hBar.position.y = 1.84;
-        group.add(vBar, hBar);
-      }
-
-      const staff = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.75, 0.05), mat);
-      staff.position.set(0.24, 0.55, 0.15);
-      staff.rotation.z = -0.12;
-      group.add(staff);
-
-      group.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-        }
-      });
-
-      return group;
-    }
-
-    function syncPiecesWithBoard() {
-      pieceMeshes.forEach((mesh) => scene.remove(mesh));
-      pieceMeshes.clear();
-
-      const board = chess.board();
-      for (let r = 0; r < 8; r++) {
-        for (let f = 0; f < 8; f++) {
-          const cell = board[r][f];
-          if (cell) {
-            const mesh = createPieceGeometry(cell.type, cell.color);
-            const pos = squareToWorld(cell.square);
-            mesh.position.copy(pos);
-            mesh.userData = {
-              square: cell.square,
-              type: cell.type,
-              color: cell.color,
-              baseY: 0,
-              baseRotY: mesh.rotation.y,
-              idlePhase: Math.random() * Math.PI * 2
+        function squareToCoords(sq) {
+            const fileIdx = FILES.indexOf(sq[0]);
+            const rankIdx = RANKS.indexOf(sq[1]);
+            return {
+                x: fileIdx * 100 + 50,
+                y: rankIdx * 100 + 50,
+                fileIdx,
+                rankIdx
             };
-            scene.add(mesh);
-            pieceMeshes.set(cell.square, mesh);
-          }
-        }
-      }
-      updateUI();
-    }
-
-    // ==========================================
-    // 8. SHATTER & PARTICLE FX ENGINE
-    // ==========================================
-    function triggerShatter(worldPos, color) {
-      audioFX.playShatter(color);
-
-      const baseMat = color === 'w' ? marbleMaterial : obsidianMaterial;
-      const shardCount = 24;
-
-      for (let i = 0; i < shardCount; i++) {
-        const radius = 0.09 + Math.random() * 0.14;
-        const detail = Math.random() > 0.5 ? 0 : 1;
-        const geo = new THREE.DodecahedronGeometry(radius, detail);
-        geo.scale(
-          0.6 + Math.random() * 0.9,
-          0.5 + Math.random() * 1.1,
-          0.6 + Math.random() * 0.9
-        );
-
-        const shardMat = baseMat.clone();
-        shardMat.transparent = true;
-        shardMat.opacity = 1.0;
-
-        const shard = new THREE.Mesh(geo, shardMat);
-        shard.castShadow = true;
-        shard.position.set(
-          worldPos.x + (Math.random() - 0.5) * 0.4,
-          0.25 + Math.random() * 0.95,
-          worldPos.z + (Math.random() - 0.5) * 0.4
-        );
-
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1.8 + Math.random() * 3.8;
-        const velocity = new THREE.Vector3(
-          Math.cos(angle) * speed,
-          2.2 + Math.random() * 3.5,
-          Math.sin(angle) * speed
-        );
-
-        const rotVel = new THREE.Vector3(
-          (Math.random() - 0.5) * 12,
-          (Math.random() - 0.5) * 12,
-          (Math.random() - 0.5) * 12
-        );
-
-        scene.add(shard);
-        activeShards.push({
-          mesh: shard,
-          velocity,
-          rotVel,
-          age: 0,
-          maxAge: 2.2 + Math.random() * 0.8
-        });
-      }
-
-      const flashLight = new THREE.PointLight(color === 'w' ? 0xffe6b3 : 0xa370ff, 12, 6);
-      flashLight.position.set(worldPos.x, 0.8, worldPos.z);
-      scene.add(flashLight);
-      setTimeout(() => scene.remove(flashLight), 180);
-    }
-
-    function spawnSlideDust(worldPos, color) {
-      const geo = new THREE.SphereGeometry(0.045, 6, 6);
-      const mat = new THREE.MeshBasicMaterial({
-        color: color === 'w' ? 0xe5dec9 : 0x8b6eff,
-        transparent: true,
-        opacity: 0.75
-      });
-      const p = new THREE.Mesh(geo, mat);
-      p.position.set(
-        worldPos.x + (Math.random() - 0.5) * 0.35,
-        0.05,
-        worldPos.z + (Math.random() - 0.5) * 0.35
-      );
-      scene.add(p);
-      activeParticles.push({ mesh: p, age: 0, maxAge: 0.55 });
-    }
-
-    // ==========================================
-    // 9. MOVE & ATTACK ANIMATION SEQUENCER
-    // ==========================================
-    function animateChessMove(moveObj, onComplete) {
-      isAnimating = true;
-      const attacker = pieceMeshes.get(moveObj.from);
-      const targetPos = squareToWorld(moveObj.to);
-      const startPos = attacker.position.clone();
-
-      let capturedSquare = moveObj.to;
-      if (moveObj.flags.includes('e')) {
-        const epRank = moveObj.color === 'w' ? '5' : '4';
-        capturedSquare = `${moveObj.to[0]}${epRank}`;
-      }
-      const victim = pieceMeshes.get(capturedSquare);
-      const isCapture = Boolean(victim);
-      const isKnight = moveObj.piece === 'n';
-
-      const duration = isCapture ? 0.68 : 0.48;
-      let elapsed = 0;
-      let shattered = false;
-
-      if (isCapture) {
-        audioFX.playAttackWindup(moveObj.color);
-        if (isKnight) {
-          audioFX.playKnightLeap(duration * 0.72);
-        } else {
-          audioFX.playStoneSlide(duration * 0.72, moveObj.color);
-        }
-      } else if (isKnight) {
-        audioFX.playKnightLeap(duration);
-      } else {
-        audioFX.playStoneSlide(duration, moveObj.color);
-      }
-
-      let rookMesh = null;
-      let rookStart = null;
-      let rookEnd = null;
-      if (moveObj.flags.includes('k') || moveObj.flags.includes('q')) {
-        const rank = moveObj.color === 'w' ? '1' : '8';
-        const rookFromFile = moveObj.flags.includes('k') ? 'h' : 'a';
-        const rookToFile = moveObj.flags.includes('k') ? 'f' : 'd';
-        const rFrom = `${rookFromFile}${rank}`;
-        const rTo = `${rookToFile}${rank}`;
-        rookMesh = pieceMeshes.get(rFrom);
-        if (rookMesh) {
-          rookStart = rookMesh.position.clone();
-          rookEnd = squareToWorld(rTo);
-          pieceMeshes.delete(rFrom);
-          pieceMeshes.set(rTo, rookMesh);
-          rookMesh.userData.square = rTo;
-        }
-      }
-
-      const clock = new THREE.Clock();
-
-      function step() {
-        const dt = clock.getDelta();
-        elapsed += dt;
-        const t = Math.min(elapsed / duration, 1);
-
-        if (isCapture) {
-          let moveFactor;
-          if (t < 0.25) {
-            const w = t / 0.25;
-            moveFactor = -0.12 * Math.sin(w * Math.PI * 0.5);
-            attacker.rotation.x = -0.28 * w;
-          } else if (t < 0.72) {
-            const s = (t - 0.25) / 0.47;
-            moveFactor = s * s * 0.88;
-            attacker.rotation.x = 0.42 * Math.sin(s * Math.PI);
-          } else {
-            const f = (t - 0.72) / 0.28;
-            moveFactor = 0.88 + 0.12 * f;
-            attacker.rotation.x = 0;
-          }
-
-          attacker.position.lerpVectors(startPos, targetPos, moveFactor);
-          if (isKnight) {
-            attacker.position.y = Math.sin(Math.max(0, moveFactor) * Math.PI) * 1.45;
-          } else if (Math.random() < 0.45) {
-            spawnSlideDust(attacker.position, moveObj.color);
-          }
-
-          if (t >= 0.65 && !shattered && victim) {
-            shattered = true;
-            triggerShatter(victim.position, victim.userData.color);
-            scene.remove(victim);
-            pieceMeshes.delete(capturedSquare);
-          }
-        } else {
-          const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-          attacker.position.lerpVectors(startPos, targetPos, ease);
-          if (isKnight) {
-            attacker.position.y = Math.sin(ease * Math.PI) * 1.35;
-          } else if (Math.random() < 0.35) {
-            spawnSlideDust(attacker.position, moveObj.color);
-          }
         }
 
-        if (rookMesh) {
-          rookMesh.position.lerpVectors(rookStart, rookEnd, t);
+        function renderBoard() {
+            const boardEl = document.getElementById('chessboard');
+            boardEl.innerHTML = '';
+
+            const boardState = game.board();
+
+            for (let r = 0; r < 8; r++) {
+                for (let f = 0; f < 8; f++) {
+                    const sqName = FILES[f] + RANKS[r];
+                    const isLight = (r + f) % 2 === 0;
+                    const sqDiv = document.createElement('div');
+                    sqDiv.className = `square ${isLight ? 'light' : 'dark'}`;
+                    sqDiv.dataset.square = sqName;
+
+                    if (selectedSquare === sqName) {
+                        sqDiv.classList.add('selected');
+                    }
+                    if (lastMoveSquares.includes(sqName)) {
+                        sqDiv.classList.add('last-move');
+                    }
+
+                    // Coordinate Labels
+                    if (f === 0) {
+                        const rankLabel = document.createElement('span');
+                        rankLabel.className = 'coord-rank';
+                        rankLabel.textContent = RANKS[r];
+                        sqDiv.appendChild(rankLabel);
+                    }
+                    if (r === 7) {
+                        const fileLabel = document.createElement('span');
+                        fileLabel.className = 'coord-file';
+                        fileLabel.textContent = FILES[f];
+                        sqDiv.appendChild(fileLabel);
+                    }
+
+                    // Piece SVG
+                    const piece = boardState[r][f];
+                    if (piece) {
+                        const key = piece.color + piece.type.toUpperCase();
+                        sqDiv.insertAdjacentHTML('beforeend', PIECE_SVGS[key] || '');
+                    }
+
+                    // Legal Move Indicator
+                    const legalMove = legalMovesForSelected.find(m => m.to === sqName);
+                    if (legalMove) {
+                        if (piece) {
+                            const capRing = document.createElement('div');
+                            capRing.className = 'legal-capture';
+                            sqDiv.appendChild(capRing);
+                        } else {
+                            const dot = document.createElement('div');
+                            dot.className = 'legal-dot';
+                            sqDiv.appendChild(dot);
+                        }
+                    }
+
+                    sqDiv.addEventListener('click', () => handleSquareClick(sqName));
+                    boardEl.appendChild(sqDiv);
+                }
+            }
+
+            updateTurnIndicator();
+            renderSVGAnnotations();
+            updateCapablancaMetrics();
         }
 
-        if (t < 1) {
-          requestAnimationFrame(step);
-        } else {
-          attacker.position.copy(targetPos);
-          attacker.rotation.x = 0;
-          pieceMeshes.delete(moveObj.from);
+        function updateTurnIndicator() {
+            const turn = game.turn();
+            const dot = document.getElementById('turn-indicator-dot');
+            const text = document.getElementById('turn-indicator-text');
+            if (turn === 'w') {
+                dot.className = 'w-3 h-3 rounded-full bg-slate-100 ring-2 ring-amber-400/60';
+                text.textContent = game.in_check() ? 'White to Move (In Check!)' : 'White to Move (Your Turn)';
+            } else {
+                dot.className = 'w-3 h-3 rounded-full bg-slate-800 border border-slate-400 ring-2 ring-amber-400/60';
+                text.textContent = 'Black to Move (Coach Thinking...)';
+            }
+        }
 
-          if (moveObj.flags.includes('p')) {
-            scene.remove(attacker);
-            const promoted = createPieceGeometry('q', moveObj.color);
-            promoted.position.copy(targetPos);
-            promoted.userData = {
-              square: moveObj.to,
-              type: 'q',
-              color: moveObj.color,
-              baseY: 0,
-              baseRotY: 0,
-              idlePhase: Math.random() * Math.PI * 2
+        /***********************************************************************
+         * 6. SVG STRATEGIC OVERLAY (ARROWS, ZONES, RULE OF SQUARE)
+         ***********************************************************************/
+        function renderSVGAnnotations() {
+            const zonesLayer = document.getElementById('svg-zones-layer');
+            const arrowsLayer = document.getElementById('svg-arrows-layer');
+            zonesLayer.innerHTML = '';
+            arrowsLayer.innerHTML = '';
+
+            if (!showOverlay) return;
+
+            let annotations = null;
+            if (currentMode === 'curriculum') {
+                const step = currentLesson.steps[currentStepIndex];
+                if (step && step.annotations) {
+                    annotations = step.annotations;
+                }
+            } else if (currentMode === 'sparring') {
+                annotations = generateDynamicSparringAnnotations();
+            }
+
+            if (!annotations) return;
+
+            const colorMap = {
+                emerald: { fill: 'rgba(16, 185, 129, 0.25)', stroke: '#10b981', marker: 'url(#arrow-emerald)' },
+                amber:   { fill: 'rgba(245, 158, 11, 0.25)', stroke: '#f59e0b', marker: 'url(#arrow-amber)' },
+                rose:    { fill: 'rgba(244, 63, 94, 0.25)',  stroke: '#f43f5e', marker: 'url(#arrow-rose)' },
+                sky:     { fill: 'rgba(56, 189, 248, 0.25)', stroke: '#38bdf8', marker: 'url(#arrow-sky)' }
             };
-            scene.add(promoted);
-            pieceMeshes.set(moveObj.to, promoted);
-          } else {
-            attacker.userData.square = moveObj.to;
-            pieceMeshes.set(moveObj.to, attacker);
-          }
 
-          isAnimating = false;
-          onComplete();
-        }
-      }
-
-      requestAnimationFrame(step);
-    }
-
-    // ==========================================
-    // 10. BOARD HIGHLIGHTS & INTERACTION
-    // ==========================================
-    function clearHighlights() {
-      highlightMeshes.forEach((m) => scene.remove(m));
-      highlightMeshes.length = 0;
-    }
-
-    function showHighlights(square, moves) {
-      clearHighlights();
-
-      const selPos = squareToWorld(square);
-      const selRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.42, 0.52, 28),
-        new THREE.MeshBasicMaterial({ color: 0xd0bcff, side: THREE.DoubleSide })
-      );
-      selRing.rotation.x = -Math.PI / 2;
-      selRing.position.set(selPos.x, 0.02, selPos.z);
-      scene.add(selRing);
-      highlightMeshes.push(selRing);
-
-      moves.forEach((m) => {
-        const pos = squareToWorld(m.to);
-        const isCapture = m.captured || m.flags.includes('e');
-        const geo = isCapture
-          ? new THREE.RingGeometry(0.38, 0.52, 24)
-          : new THREE.CircleGeometry(0.20, 20);
-        const mat = new THREE.MeshBasicMaterial({
-          color: isCapture ? 0xf2b8b5 : 0xd0bcff,
-          transparent: true,
-          opacity: 0.85,
-          side: THREE.DoubleSide
-        });
-        const marker = new THREE.Mesh(geo, mat);
-        marker.rotation.x = -Math.PI / 2;
-        marker.position.set(pos.x, 0.02, pos.z);
-        scene.add(marker);
-        highlightMeshes.push(marker);
-      });
-    }
-
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-
-    window.addEventListener('pointerdown', (e) => {
-      if (isAnimating || chess.isGameOver()) return;
-      if (e.target.closest('.md-top-bar')) return;
-      if (vsAI && chess.turn() === 'b') return;
-
-      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(pointer, camera);
-
-      const interactables = [...squareMeshes.values(), ...pieceMeshes.values()];
-      const hits = raycaster.intersectObjects(interactables, true);
-      if (hits.length === 0) {
-        selectedSquare = null;
-        clearHighlights();
-        return;
-      }
-
-      let obj = hits[0].object;
-      while (obj.parent && !obj.userData.square) {
-        obj = obj.parent;
-      }
-      const clickedSquare = obj.userData.square;
-      if (!clickedSquare) return;
-
-      const chosenMove = validMoves.find((m) => m.to === clickedSquare);
-      if (selectedSquare && chosenMove) {
-        executeMove(chosenMove);
-        return;
-      }
-
-      const pieceOnSquare = chess.get(clickedSquare);
-      if (pieceOnSquare && pieceOnSquare.color === chess.turn()) {
-        selectedSquare = clickedSquare;
-        validMoves = chess.moves({ square: clickedSquare, verbose: true });
-        audioFX.playSelect(pieceOnSquare.color);
-        showHighlights(clickedSquare, validMoves);
-      } else {
-        selectedSquare = null;
-        validMoves = [];
-        clearHighlights();
-      }
-    });
-
-    function executeMove(moveInput) {
-      clearHighlights();
-      selectedSquare = null;
-      validMoves = [];
-
-      const moveResult = chess.move({
-        from: moveInput.from,
-        to: moveInput.to,
-        promotion: 'q'
-      });
-
-      if (!moveResult) return;
-
-      animateChessMove(moveResult, () => {
-        updateUI();
-        if (!chess.isGameOver() && vsAI && chess.turn() === 'b') {
-          setTimeout(makeObsidianAIMove, 320);
-        }
-      });
-    }
-
-    // ==========================================
-    // 11. WEB SPEECH API VOICE COMMAND ENGINE
-    // ==========================================
-    function parseSpokenChessCommand(rawTranscript) {
-      if (isAnimating || chess.isGameOver()) return null;
-      if (vsAI && chess.turn() === 'b') return null;
-
-      let text = rawTranscript.toLowerCase().trim();
-      const legalMoves = chess.moves({ verbose: true });
-      if (legalMoves.length === 0) return null;
-
-      // 1. Check Castling Commands
-      if (text.includes('castle')) {
-        if (text.includes('queen') || text.includes('long')) {
-          return legalMoves.find((m) => m.san === 'O-O-O') || null;
-        }
-        return legalMoves.find((m) => m.san === 'O-O') || legalMoves.find((m) => m.san.startsWith('O-O')) || null;
-      }
-
-      // 2. Normalize common speech-to-text homophones for pieces, files, and ranks
-      const replacements = [
-        [/\b(night|nights|horse)\b/g, 'knight'],
-        [/\b(brook|rock|castle|tower)\b/g, 'rook'],
-        [/\b(pond|upon|porn)\b/g, 'pawn'],
-        [/\b(alpha)\b/g, 'a'],
-        [/\b(bravo|bee|be)\b/g, 'b'],
-        [/\b(charlie|see|sea)\b/g, 'c'],
-        [/\b(delta|dee)\b/g, 'd'],
-        [/\b(echo|he)\b/g, 'e'],
-        [/\b(foxtrot|ef)\b/g, 'f'],
-        [/\b(golf|gee)\b/g, 'g'],
-        [/\b(hotel|aitch|age)\b/g, 'h'],
-        [/\b(one|won)\b/g, '1'],
-        [/\b(two|too|to)\b/g, '2'],
-        [/\b(three|tree|free)\b/g, '3'],
-        [/\b(four|for|fore)\b/g, '4'],
-        [/\b(five)\b/g, '5'],
-        [/\b(six|sex)\b/g, '6'],
-        [/\b(seven)\b/g, '7'],
-        [/\b(eight|ate)\b/g, '8']
-      ];
-
-      // Preserve "to" as separator before converting isolated rank homophones
-      let normalized = text
-        .replace(/\b(knight|night|horse)\b/g, ' knight ')
-        .replace(/\b(bishop)\b/g, ' bishop ')
-        .replace(/\b(rook|brook|rock|tower)\b/g, ' rook ')
-        .replace(/\b(queen)\b/g, ' queen ')
-        .replace(/\b(king)\b/g, ' king ')
-        .replace(/\b(pawn|pond)\b/g, ' pawn ');
-
-      // Convert rank number words only when following a file letter or word
-      normalized = normalized
-        .replace(/\b(one|won)\b/g, '1')
-        .replace(/\b(three|tree)\b/g, '3')
-        .replace(/\b(four|for|fore)\b/g, '4')
-        .replace(/\b(five)\b/g, '5')
-        .replace(/\b(six)\b/g, '6')
-        .replace(/\b(seven)\b/g, '7')
-        .replace(/\b(eight|ate)\b/g, '8');
-
-      // Handle "two / too / to" carefully when preceded by a file letter a-h
-      normalized = normalized.replace(/\b([a-h]|bee|be|see|sea|dee|gee)\s+(two|too|to)\b/g, '$1 2');
-
-      // Normalize spoken file homophones right before a rank 1-8
-      normalized = normalized
-        .replace(/\b(bee|be)\s*([1-8])\b/g, 'b$2')
-        .replace(/\b(see|sea)\s*([1-8])\b/g, 'c$2')
-        .replace(/\b(dee)\s*([1-8])\b/g, 'd$2')
-        .replace(/\b(gee)\s*([1-8])\b/g, 'g$2')
-        .replace(/\b(aitch)\s*([1-8])\b/g, 'h$2');
-
-      // Collapse spaces between file [a-h] and rank [1-8] (e.g. "f 3" -> "f3")
-      normalized = normalized.replace(/\b([a-h])\s+([1-8])\b/g, '$1$2');
-
-      // Identify spoken piece type if mentioned
-      let pieceType = null;
-      if (normalized.includes('knight')) pieceType = 'n';
-      else if (normalized.includes('bishop')) pieceType = 'b';
-      else if (normalized.includes('rook')) pieceType = 'r';
-      else if (normalized.includes('queen')) pieceType = 'q';
-      else if (normalized.includes('king')) pieceType = 'k';
-      else if (normalized.includes('pawn')) pieceType = 'p';
-
-      const wantsCapture = /\b(takes|take|captures|capture|shatter|destroy|kills|x)\b/.test(normalized);
-
-      // Extract all algebraic squares mentioned (e.g., ['e2', 'e4'] or ['f3'])
-      const squaresFound = normalized.match(/\b[a-h][1-8]\b/g) || [];
-      if (squaresFound.length === 0) return null;
-
-      const targetSquare = squaresFound[squaresFound.length - 1];
-      const originSquare = squaresFound.length >= 2 ? squaresFound[0] : null;
-
-      // Filter legal moves matching target square
-      let candidates = legalMoves.filter((m) => m.to === targetSquare);
-      if (candidates.length === 0) return null;
-
-      if (originSquare) {
-        const fromMatch = candidates.filter((m) => m.from === originSquare);
-        if (fromMatch.length > 0) candidates = fromMatch;
-      }
-
-      if (pieceType) {
-        const pieceMatch = candidates.filter((m) => m.piece === pieceType);
-        if (pieceMatch.length > 0) candidates = pieceMatch;
-      }
-
-      if (wantsCapture) {
-        const capMatch = candidates.filter((m) => m.captured || m.flags.includes('e'));
-        if (capMatch.length > 0) candidates = capMatch;
-      }
-
-      return candidates[0] || null;
-    }
-
-    // Setup Web Speech API Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
-    let voiceActive = false;
-
-    const btnVoice = document.getElementById('btn-voice');
-    const voiceIcon = document.getElementById('voice-icon');
-    const voiceLabel = document.getElementById('voice-label');
-
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = (event) => {
-        const lastResult = event.results[event.results.length - 1];
-        if (!lastResult.isFinal) return;
-
-        const transcript = lastResult[0].transcript.trim();
-        const matchedMove = parseSpokenChessCommand(transcript);
-
-        if (matchedMove) {
-          audioFX.playVoiceChime();
-          const pieceNames = { p: 'Pawn', n: 'Knight', b: 'Bishop', r: 'Rook', q: 'Queen', k: 'King' };
-          showToast(`"${transcript}" → ${pieceNames[matchedMove.piece]} to ${matchedMove.to.toUpperCase()}`);
-          executeMove(matchedMove);
-        } else {
-          showToast(`Unrecognized Move: "${transcript}"`);
-        }
-      };
-
-      recognition.onerror = (event) => {
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          voiceActive = false;
-          updateVoiceButtonUI();
-          showToast('Microphone Permission Denied');
-        }
-      };
-
-      recognition.onend = () => {
-        // Keep listening continuously while voice mode is toggled on
-        if (voiceActive) {
-          try {
-            recognition.start();
-          } catch (_) {}
-        }
-      };
-    } else {
-      btnVoice.title = 'Web Speech API not supported in this browser';
-      btnVoice.style.opacity = '0.5';
-    }
-
-    function updateVoiceButtonUI() {
-      btnVoice.classList.toggle('listening', voiceActive);
-      voiceIcon.textContent = voiceActive ? 'mic' : 'mic_off';
-      voiceLabel.textContent = voiceActive ? 'Listening…' : 'Voice Off';
-    }
-
-    btnVoice.addEventListener('click', () => {
-      if (!recognition) {
-        showToast('Speech Recognition requires Chrome or Edge');
-        return;
-      }
-      voiceActive = !voiceActive;
-      updateVoiceButtonUI();
-
-      if (voiceActive) {
-        audioFX.playVoiceChime();
-        try {
-          recognition.start();
-          showToast('Speak a move: e.g. "Knight to F3"');
-        } catch (_) {}
-      } else {
-        audioFX.playSelect('b');
-        try {
-          recognition.stop();
-        } catch (_) {}
-        showToast('Voice Commands Muted');
-      }
-    });
-
-    // ==========================================
-    // 12. OBSIDIAN AI OPPONENT (MATERIAL HEURISTIC)
-    // ==========================================
-    const PIECE_VALUES = { p: 10, n: 32, b: 33, r: 50, q: 90, k: 900 };
-
-    function makeObsidianAIMove() {
-      if (chess.isGameOver()) return;
-      const moves = chess.moves({ verbose: true });
-      if (moves.length === 0) return;
-
-      let bestMove = moves[0];
-      let bestScore = -Infinity;
-
-      for (const m of moves) {
-        let score = (Math.random() - 0.5) * 4;
-        if (m.captured) {
-          score += PIECE_VALUES[m.captured] * 1.4 - PIECE_VALUES[m.piece] * 0.15;
-        }
-        if (m.san.includes('+')) score += 12;
-        if (['d4', 'd5', 'e4', 'e5'].includes(m.to)) score += 4;
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = m;
-        }
-      }
-
-      executeMove(bestMove);
-    }
-
-    // ==========================================
-    // 13. UI & HUD UPDATES
-    // ==========================================
-    const turnDot = document.getElementById('turn-dot');
-    const statusText = document.getElementById('status-text');
-    const toastEl = document.getElementById('toast');
-    const capturedWEl = document.getElementById('captured-w');
-    const capturedBEl = document.getElementById('captured-b');
-
-    const UNICODE_PIECES = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
-    let toastTimer = null;
-
-    function showToast(msg) {
-      toastEl.textContent = msg;
-      toastEl.classList.add('visible');
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 2500);
-    }
-
-    function updateUI() {
-      const turn = chess.turn();
-      turnDot.className = 'turn-dot ' + (turn === 'b' ? 'black' : '');
-
-      if (chess.isCheckmate()) {
-        const winner = turn === 'w' ? 'Obsidian' : 'Marble';
-        statusText.textContent = `Checkmate — ${winner} Wins`;
-        showToast(`Checkmate! ${winner} Victorious`);
-        audioFX.playCathedralBell(true);
-      } else if (chess.isDraw()) {
-        statusText.textContent = 'Stalemate / Draw';
-        showToast('Draw Game');
-      } else {
-        const side = turn === 'w' ? 'Marble' : 'Obsidian';
-        statusText.textContent = `${side}'s Turn`;
-        if (chess.inCheck()) {
-          showToast(`${side} King in Check!`);
-          audioFX.playCathedralBell(false);
-        }
-      }
-
-      const history = chess.history({ verbose: true });
-      const capW = [];
-      const capB = [];
-      history.forEach((h) => {
-        if (h.captured) {
-          if (h.color === 'w') capB.push(UNICODE_PIECES[h.captured] || '♟');
-          else capW.push(UNICODE_PIECES[h.captured] || '♟');
-        }
-      });
-      capturedBEl.textContent = capB.join('') || '—';
-      capturedWEl.textContent = capW.join('') || '—';
-    }
-
-    // Single-Level Toolbar Event Listeners
-    const btnModeAI = document.getElementById('btn-mode-ai');
-    const modeLabel = document.getElementById('mode-label');
-    btnModeAI.addEventListener('click', () => {
-      vsAI = !vsAI;
-      btnModeAI.classList.toggle('active', vsAI);
-      modeLabel.textContent = vsAI ? 'vs. Obsidian AI' : '2-Player Pass';
-      audioFX.playSelect('w');
-      if (vsAI && chess.turn() === 'b' && !chess.isGameOver() && !isAnimating) {
-        makeObsidianAIMove();
-      }
-    });
-
-    const btnAudio = document.getElementById('btn-audio');
-    const audioIcon = document.getElementById('audio-icon');
-    const audioLabel = document.getElementById('audio-label');
-    btnAudio.addEventListener('click', () => {
-      audioFX.enabled = !audioFX.enabled;
-      btnAudio.classList.toggle('active', audioFX.enabled);
-      audioIcon.textContent = audioFX.enabled ? 'volume_up' : 'volume_off';
-      audioLabel.textContent = audioFX.enabled ? 'SFX On' : 'Muted';
-      if (audioFX.enabled) audioFX.playSelect('w');
-    });
-
-    document.getElementById('btn-cam-white').addEventListener('click', () => {
-      audioFX.playSelect('w');
-      moveCameraTo(0, 9.5, 11.5);
-    });
-
-    document.getElementById('btn-cam-black').addEventListener('click', () => {
-      audioFX.playSelect('b');
-      moveCameraTo(0, 9.5, -11.5);
-    });
-
-    document.getElementById('btn-cam-top').addEventListener('click', () => {
-      audioFX.playSelect('w');
-      moveCameraTo(0, 15.5, 0.01);
-    });
-
-    document.getElementById('btn-reset').addEventListener('click', () => {
-      if (isAnimating) return;
-      audioFX.playStoneSlide(0.35, 'w');
-      chess.reset();
-      clearHighlights();
-      selectedSquare = null;
-      validMoves = [];
-      syncPiecesWithBoard();
-      showToast('Cathedral Board Reset');
-    });
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // ==========================================
-    // 14. MAIN RENDER & PROCEDURAL ANIMATION LOOP
-    // ==========================================
-    buildCathedralAndLights();
-    buildChessboard();
-    syncPiecesWithBoard();
-
-    const mainClock = new THREE.Clock();
-
-    function animate() {
-      requestAnimationFrame(animate);
-      const dt = Math.min(mainClock.getDelta(), 0.1);
-      const elapsedTime = mainClock.getElapsedTime();
-
-      if (cameraGoalPos) {
-        camera.position.lerp(cameraGoalPos, 0.08);
-        controls.target.lerp(cameraGoalTarget, 0.08);
-        if (camera.position.distanceTo(cameraGoalPos) < 0.08) {
-          cameraGoalPos = null;
-        }
-      }
-      controls.update();
-
-      pieceMeshes.forEach((mesh) => {
-        if (!isAnimating) {
-          const phase = mesh.userData.idlePhase + elapsedTime * 2.1;
-          mesh.position.y = Math.sin(phase) * 0.025 + 0.025;
-          mesh.rotation.y = mesh.userData.baseRotY + Math.sin(phase * 0.6) * 0.035;
-        }
-      });
-
-      torchLights.forEach((t) => {
-        const flicker = Math.sin(elapsedTime * 11 + t.phase) * 0.6 + Math.cos(elapsedTime * 19 + t.phase) * 0.4;
-        t.light.intensity = t.baseIntensity + flicker;
-        t.flame.scale.setScalar(0.92 + flicker * 0.08);
-      });
-
-      for (let i = activeShards.length - 1; i >= 0; i--) {
-        const s = activeShards[i];
-        s.age += dt;
-        s.velocity.y -= 9.8 * dt;
-        s.mesh.position.addScaledVector(s.velocity, dt);
-
-        if (s.mesh.position.y < 0.06) {
-          s.mesh.position.y = 0.06;
-          s.velocity.y *= -0.42;
-          s.velocity.x *= 0.78;
-          s.velocity.z *= 0.78;
+            // Render Square Zones
+            if (annotations.zones) {
+                annotations.zones.forEach(z => {
+                    const c = squareToCoords(z.sq);
+                    const palette = colorMap[z.color] || colorMap.emerald;
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', c.fileIdx * 100 + 4);
+                    rect.setAttribute('y', c.rankIdx * 100 + 4);
+                    rect.setAttribute('width', 92);
+                    rect.setAttribute('height', 92);
+                    rect.setAttribute('rx', 10);
+                    rect.setAttribute('fill', palette.fill);
+                    rect.setAttribute('stroke', palette.stroke);
+                    rect.setAttribute('stroke-width', '3');
+                    rect.setAttribute('stroke-dasharray', '6 4');
+                    zonesLayer.appendChild(rect);
+
+                    if (z.label) {
+                        const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        labelBg.setAttribute('x', c.fileIdx * 100 + 6);
+                        labelBg.setAttribute('y', c.rankIdx * 100 + 74);
+                        labelBg.setAttribute('width', 88);
+                        labelBg.setAttribute('height', 20);
+                        labelBg.setAttribute('rx', 4);
+                        labelBg.setAttribute('fill', 'rgba(15, 23, 42, 0.85)');
+                        zonesLayer.appendChild(labelBg);
+
+                        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        txt.setAttribute('x', c.x);
+                        txt.setAttribute('y', c.rankIdx * 100 + 88);
+                        txt.setAttribute('text-anchor', 'middle');
+                        txt.setAttribute('fill', palette.stroke);
+                        txt.setAttribute('font-size', '11');
+                        txt.setAttribute('font-family', 'JetBrains Mono, monospace');
+                        txt.setAttribute('font-weight', '700');
+                        txt.textContent = z.label;
+                        zonesLayer.appendChild(txt);
+                    }
+                });
+            }
+
+            // Render Strategic Arrows
+            if (annotations.arrows) {
+                annotations.arrows.forEach(a => {
+                    const start = squareToCoords(a.from);
+                    const end = squareToCoords(a.to);
+                    const palette = colorMap[a.color] || colorMap.emerald;
+
+                    const dx = end.x - start.x;
+                    const dy = end.y - start.y;
+                    const len = Math.hypot(dx, dy);
+                    if (len === 0) return;
+
+                    // Shorten start and end slightly so arrow looks clean
+                    const ux = dx / len;
+                    const uy = dy / len;
+                    const x1 = start.x + ux * 18;
+                    const y1 = start.y + uy * 18;
+                    const x2 = end.x - ux * 22;
+                    const y2 = end.y - uy * 22;
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', palette.stroke);
+                    line.setAttribute('stroke-width', '7');
+                    line.setAttribute('stroke-linecap', 'round');
+                    line.setAttribute('opacity', '0.85');
+                    line.setAttribute('marker-end', palette.marker);
+                    arrowsLayer.appendChild(line);
+                });
+            }
         }
 
-        s.mesh.rotation.x += s.rotVel.x * dt;
-        s.mesh.rotation.y += s.rotVel.y * dt;
-        s.mesh.rotation.z += s.rotVel.z * dt;
+        // Dynamic overlay generator for live sparring mode
+        function generateDynamicSparringAnnotations() {
+            const zones = [];
+            const arrows = [];
+            const board = game.board();
 
-        const lifeRatio = s.age / s.maxAge;
-        if (lifeRatio > 0.65) {
-          s.mesh.material.opacity = Math.max(0, 1 - (lifeRatio - 0.65) / 0.35);
+            // Find White King and suggest centralization if still on back rank
+            for (let r = 0; r < 8; r++) {
+                for (let f = 0; f < 8; f++) {
+                    const p = board[r][f];
+                    if (!p) continue;
+                    const sq = FILES[f] + RANKS[r];
+                    if (p.color === 'w' && p.type === 'k' && r >= 6) {
+                        const targetSq = f > 4 ? FILES[f - 1] + RANKS[r - 1] : FILES[f] + RANKS[r - 1];
+                        arrows.push({ from: sq, to: targetSq, color: 'emerald' });
+                        zones.push({ sq: targetSq, color: 'emerald', label: 'Activate King' });
+                    }
+                    if (p.color === 'w' && p.type === 'r' && r === 7) {
+                        const seventhSq = FILES[f] + '7';
+                        arrows.push({ from: sq, to: seventhSq, color: 'amber' });
+                        zones.push({ sq: seventhSq, color: 'amber', label: '7th Rank' });
+                    }
+                    if (p.color === 'w' && p.type === 'n' && sq === 'd3') {
+                        arrows.push({ from: 'd3', to: 'c5', color: 'emerald' });
+                        zones.push({ sq: 'c5', color: 'emerald', label: 'Outpost' });
+                    }
+                }
+            }
+            return { zones, arrows };
         }
 
-        if (s.age >= s.maxAge) {
-          scene.remove(s.mesh);
-          s.mesh.geometry.dispose();
-          s.mesh.material.dispose();
-          activeShards.splice(i, 1);
+        function toggleVisualAnnotations() {
+            showOverlay = !showOverlay;
+            const btn = document.getElementById('btn-toggle-overlay');
+            if (showOverlay) {
+                btn.textContent = 'Overlay: ON';
+                btn.className = 'text-xs font-mono px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition';
+            } else {
+                btn.textContent = 'Overlay: OFF';
+                btn.className = 'text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 transition';
+            }
+            renderSVGAnnotations();
         }
-      }
 
-      for (let i = activeParticles.length - 1; i >= 0; i--) {
-        const p = activeParticles[i];
-        p.age += dt;
-        p.mesh.position.y += 0.35 * dt;
-        p.mesh.scale.multiplyScalar(0.96);
-        p.mesh.material.opacity = Math.max(0, 0.75 * (1 - p.age / p.maxAge));
-        if (p.age >= p.maxAge) {
-          scene.remove(p.mesh);
-          p.mesh.geometry.dispose();
-          p.mesh.material.dispose();
-          activeParticles.splice(i, 1);
+        /***********************************************************************
+         * 7. INTERACTIVE MOVE HANDLING (CURRICULUM & SPARRING MODES)
+         ***********************************************************************/
+        function handleSquareClick(sqName) {
+            if (game.turn() !== 'w') return; // Wait for coach/opponent reply
+
+            // If clicking a square that is a legal destination for the currently selected piece
+            const moveCandidate = legalMovesForSelected.find(m => m.to === sqName);
+            if (selectedSquare && moveCandidate) {
+                executeUserMove(selectedSquare, sqName);
+                return;
+            }
+
+            // Otherwise, check if the clicked square contains a White piece
+            const piece = game.get(sqName);
+            if (piece && piece.color === 'w') {
+                selectedSquare = sqName;
+                legalMovesForSelected = game.moves({ square: sqName, verbose: true });
+            } else {
+                selectedSquare = null;
+                legalMovesForSelected = [];
+            }
+            renderBoard();
         }
-      }
 
-      renderer.render(scene, camera);
-    }
+        function executeUserMove(fromSq, toSq) {
+            if (currentMode === 'curriculum') {
+                handleCurriculumMove(fromSq, toSq);
+            } else if (currentMode === 'sparring') {
+                handleSparringMove(fromSq, toSq);
+            }
+        }
 
-    animate();
-  </script>
+        function handleCurriculumMove(fromSq, toSq) {
+            const step = currentLesson.steps[currentStepIndex];
+            if (!step) return;
+
+            const isPrimaryMatch = (step.expectedMove.from === fromSq && step.expectedMove.to === toSq);
+            const isAltMatch = step.altMoves && step.altMoves.some(m => m.from === fromSq && m.to === toSq);
+
+            if (isPrimaryMatch || isAltMatch) {
+                const moveObj = game.move({ from: fromSq, to: toSq, promotion: 'q' });
+                selectedSquare = null;
+                legalMovesForSelected = [];
+                lastMoveSquares = [fromSq, toSq];
+                renderBoard();
+
+                setFeedback('success', `Move Played: ${moveObj.san}`, step.successFeedback);
+
+                // Check if there is an opponent auto-reply and a subsequent step
+                if (step.autoReply) {
+                    setTimeout(() => {
+                        const replyObj = game.move({ from: step.autoReply.from, to: step.autoReply.to, promotion: 'q' });
+                        lastMoveSquares = [step.autoReply.from, step.autoReply.to];
+                        currentStepIndex++;
+                        loadCurrentStepPromptOnly();
+                        renderBoard();
+                    }, 650);
+                } else {
+                    // Lesson completed!
+                    completedLessons.add(currentLesson.id);
+                    updateMasteryProgress();
+                    document.getElementById('step-counter-label').textContent = `Completed ✓`;
+                    renderSidebarList();
+                }
+            } else {
+                // Move is legal in chess, but positionally wrong for Capablanca's method
+                const key = `${fromSq}-${toSq}`;
+                const customReason = (step.wrongFeedback && step.wrongFeedback[key])
+                    ? step.wrongFeedback[key]
+                    : generatePositionalCritique(fromSq, toSq, step.expectedMove);
+
+                selectedSquare = null;
+                legalMovesForSelected = [];
+                renderBoard();
+                setFeedback('error', `Inaccurate Plan (${fromSq}→${toSq})`, customReason);
+            }
+        }
+
+        function generatePositionalCritique(fromSq, toSq, expected) {
+            const movedPiece = game.get(fromSq);
+            const expectedPiece = game.get(expected.from);
+            if (expectedPiece && expectedPiece.type === 'k' && movedPiece.type === 'p') {
+                return `Capablanca Principle Violated: You pushed a pawn (${fromSq}→${toSq}) before centralizing or positioning your King! In the endgame, the King must lead or seize opposition first.`;
+            }
+            if (expectedPiece && expectedPiece.type === 'r' && movedPiece.type !== 'r') {
+                return `Capablanca Principle Violated: Look at your Rook! Controlling the open file, 4th-rank bridge, or 7th rank takes priority over slow side moves.`;
+            }
+            return `That move misses Capablanca's positional priority here. Ask yourself: Which move maximizes piece activity, fixes a weakness, or seizes key central/endgame squares? Click 'Hint' to highlight the key square.`;
+        }
+
+        /***********************************************************************
+         * 8. LIVE POSITIONAL SPARRING ENGINE & MOVE COACHING
+         ***********************************************************************/
+        function handleSparringMove(fromSq, toSq) {
+            const fenBefore = game.fen();
+            const metricsBefore = computeCapablancaMetrics(game);
+
+            const moveObj = game.move({ from: fromSq, to: toSq, promotion: 'q' });
+            if (!moveObj) return;
+
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            lastMoveSquares = [fromSq, toSq];
+            renderBoard();
+
+            const metricsAfter = computeCapablancaMetrics(game);
+            const coachingCommentary = buildSparringMoveCoaching(moveObj, metricsBefore, metricsAfter);
+            setFeedback(coachingCommentary.status, `You played ${moveObj.san}`, coachingCommentary.text);
+
+            if (game.game_over()) {
+                setFeedback('success', 'Sparring Complete', 'Game concluded! Reset or select another sparring drill on the left.');
+                return;
+            }
+
+            // Heuristic AI Opponent Reply
+            setTimeout(() => {
+                makeHeuristicBlackReply();
+            }, 550);
+        }
+
+        function makeHeuristicBlackReply() {
+            const moves = game.moves({ verbose: true });
+            if (moves.length === 0) return;
+
+            // Score Black moves by basic positional heuristics (captures, centralizing king, advancing pawns)
+            let bestMove = moves[0];
+            let bestScore = -9999;
+
+            moves.forEach(m => {
+                game.move(m);
+                let score = 0;
+                // Material evaluation for Black
+                const b = game.board();
+                const vals = { p: 100, n: 310, b: 320, r: 500, q: 900, k: 0 };
+                for (let r = 0; r < 8; r++) {
+                    for (let f = 0; f < 8; f++) {
+                        const p = b[r][f];
+                        if (!p) continue;
+                        const v = vals[p.type];
+                        score += (p.color === 'b' ? v : -v);
+                        // Centralize Black King in endgame
+                        if (p.color === 'b' && p.type === 'k') {
+                            const centerDist = Math.abs(3.5 - r) + Math.abs(3.5 - f);
+                            score += (7 - centerDist) * 8;
+                        }
+                    }
+                }
+                game.undo();
+                // Slight randomness so drills feel natural
+                score += Math.random() * 6;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = m;
+                }
+            });
+
+            game.move(bestMove);
+            lastMoveSquares = [bestMove.from, bestMove.to];
+            renderBoard();
+        }
+
+        function buildSparringMoveCoaching(moveObj, before, after) {
+            const deltaKing = after.kingActivity - before.kingActivity;
+            const deltaCoord = after.pieceCoord - before.pieceCoord;
+            const deltaPawns = after.pawnStructure - before.pawnStructure;
+
+            if (moveObj.piece === 'k' && deltaKing > 0) {
+                return {
+                    status: 'success',
+                    text: `Strong Capablanca Endgame Technique! Centralizing your King (${moveObj.san}) boosted your King Activity score by +${deltaKing}%. The King is an attacking piece in the ending.`
+                };
+            }
+            if (moveObj.piece === 'r' && moveObj.to[1] === '7') {
+                return {
+                    status: 'success',
+                    text: `Textbook 7th Rank Invasion (${moveObj.san})! Your Rook now ties down Black's base pawns and restricts the enemy King.`
+                };
+            }
+            if (moveObj.piece === 'n' && (moveObj.to === 'c5' || moveObj.to === 'd4' || moveObj.to === 'e5')) {
+                return {
+                    status: 'success',
+                    text: `Ideal Outpost (${moveObj.san})! Anchoring the Knight on a central dark square maximizes Piece Coordination while highlighting Black's Bad Bishop.`
+                };
+            }
+            if (moveObj.piece === 'p' && (moveObj.to[0] === 'a' || moveObj.to[0] === 'b' || moveObj.to[0] === 'c')) {
+                return {
+                    status: 'success',
+                    text: `Mobilizing the Queenside Majority (${moveObj.san})! Remember to keep your pawns abreast and supported by your King.`
+                };
+            }
+            if (deltaKing < 0) {
+                return {
+                    status: 'warn',
+                    text: `Caution: ${moveObj.san} moved your King away from the center (-${Math.abs(deltaKing)}% King Activity). In simplified positions, the King belongs in the heart of the board.`
+                };
+            }
+            return {
+                status: 'neutral',
+                text: `Solid positional continuation (${moveObj.san}). Keep monitoring the 5 Capablanca Metrics below—look to improve your worst-placed piece or advance your pawn majority.`
+            };
+        }
+
+        /***********************************************************************
+         * 9. THE 5-METRIC CAPABLANCA PRINCIPLE ANALYZER
+         ***********************************************************************/
+        function computeCapablancaMetrics(chessInstance) {
+            const b = chessInstance.board();
+
+            // 1. King Activity / Centralization (Endgame focus)
+            let kingActivity = 65;
+            // 2. Pawn Structure (Islands, Passed Pawns, Doubled Pawns)
+            let pawnStructure = 82;
+            // 3. Piece Coordination & Outposts (7th Rank Rooks, Central Knights)
+            let pieceCoord = 75;
+            // 4. Simplification Logic
+            let simplification = 85;
+            // 5. Prophylaxis & Restriction
+            let prophylaxis = 80;
+
+            let whitePawnFiles = new Set();
+            let whitePawnsCount = 0;
+
+            for (let r = 0; r < 8; r++) {
+                for (let f = 0; f < 8; f++) {
+                    const p = b[r][f];
+                    if (!p) continue;
+                    if (p.color === 'w') {
+                        if (p.type === 'k') {
+                            // Rank 7 (index 7) is 1st rank; Rank 2 (index 2) is 6th rank
+                            const rankAdvancement = (7 - r) * 8;
+                            const fileCentrality = (3.5 - Math.abs(3.5 - f)) * 6;
+                            kingActivity = Math.min(99, Math.round(52 + rankAdvancement + fileCentrality));
+                        }
+                        if (p.type === 'p') {
+                            whitePawnFiles.add(f);
+                            whitePawnsCount++;
+                            // Passed pawn bonus
+                            if (r <= 3) pawnStructure = Math.min(98, pawnStructure + 8);
+                        }
+                        if (p.type === 'r') {
+                            if (r === 1) pieceCoord = Math.min(99, pieceCoord + 18); // 7th rank!
+                            if (f === 2) pieceCoord = Math.min(99, pieceCoord + 6);  // c-file control
+                        }
+                        if (p.type === 'n') {
+                            if ((r === 3 || r === 4) && (f >= 2 && f <= 5)) {
+                                pieceCoord = Math.min(99, pieceCoord + 16); // Central outpost
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Calculate Pawn Islands for White
+            const sortedFiles = Array.from(whitePawnFiles).sort((a, b) => a - b);
+            let islands = sortedFiles.length > 0 ? 1 : 0;
+            for (let i = 1; i < sortedFiles.length; i++) {
+                if (sortedFiles[i] - sortedFiles[i - 1] > 1) islands++;
+            }
+            if (islands <= 2) pawnStructure = Math.min(98, pawnStructure + 8);
+            if (islands >= 3) pawnStructure = Math.max(55, pawnStructure - (islands - 2) * 10);
+
+            const overall = Math.round((kingActivity + pawnStructure + pieceCoord + simplification + prophylaxis) / 5);
+
+            return {
+                kingActivity,
+                pawnStructure,
+                pieceCoord,
+                simplification,
+                prophylaxis,
+                overall
+            };
+        }
+
+        function updateCapablancaMetrics() {
+            const m = computeCapablancaMetrics(game);
+            document.getElementById('overall-positional-grade').textContent = `Positional Clarity: ${m.overall}%`;
+
+            const metricsList = [
+                { label: "1. King Activity & Centralization", val: m.kingActivity, desc: "King leading the endgame / opposition" },
+                { label: "2. Pawn Structure & Islands", val: m.pawnStructure, desc: "Compact islands & passed pawn creation" },
+                { label: "3. Piece Scope & Outposts", val: m.pieceCoord, desc: "7th-rank Rooks & dark-square Knights" },
+                { label: "4. Simplification Logic", val: m.simplification, desc: "Favorable trades into winning endings" },
+                { label: "5. Prophylaxis & Restriction", val: m.prophylaxis, desc: "Neutralizing opponent counterplay" }
+            ];
+
+            const container = document.getElementById('metrics-bars-container');
+            container.innerHTML = metricsList.map(item => {
+                const barColor = item.val >= 85 ? 'bg-emerald-500' : item.val >= 70 ? 'bg-amber-500' : 'bg-sky-500';
+                return `
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="font-medium text-slate-200">${item.label}</span>
+                            <span class="font-mono text-slate-300 font-semibold">${item.val}%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full ${barColor} transition-all duration-300" style="width: ${item.val}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /***********************************************************************
+         * 10. UI NAVIGATION, SYLLABUS RENDERING & FEEDBACK HELPERS
+         ***********************************************************************/
+        function renderSidebarList() {
+            const container = document.getElementById('lesson-list-container');
+            container.innerHTML = '';
+
+            if (currentMode === 'curriculum') {
+                CURRICULUM_MODULES.forEach(mod => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'space-y-1.5';
+                    groupDiv.innerHTML = `<div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 px-2 pt-1 font-semibold">${mod.moduleTitle}</div>`;
+
+                    mod.lessons.forEach(lesson => {
+                        const isSelected = currentLesson.id === lesson.id;
+                        const isDone = completedLessons.has(lesson.id);
+                        const btn = document.createElement('button');
+                        btn.className = `w-full text-left p-2.5 rounded-lg border transition flex items-start justify-between gap-2 ${
+                            isSelected
+                                ? 'bg-amber-500/15 border-amber-500/50 text-white shadow'
+                                : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:bg-slate-800/60'
+                        }`;
+                        btn.onclick = () => selectLesson(lesson);
+                        btn.innerHTML = `
+                            <div>
+                                <div class="text-[10px] font-mono uppercase ${isSelected ? 'text-amber-300' : 'text-slate-400'}">${lesson.badge}</div>
+                                <div class="text-xs font-semibold leading-snug mt-0.5">${lesson.title}</div>
+                            </div>
+                            <span class="text-xs font-mono ${isDone ? 'text-emerald-400' : 'text-slate-600'}">${isDone ? '✓' : '○'}</span>
+                        `;
+                        groupDiv.appendChild(btn);
+                    });
+
+                    container.appendChild(groupDiv);
+                });
+            } else if (currentMode === 'sparring') {
+                SPARRING_SCENARIOS.forEach(scen => {
+                    const isSelected = currentSparring.id === scen.id;
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-3 rounded-lg border transition mb-2 ${
+                        isSelected
+                            ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow'
+                            : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:bg-slate-800/60'
+                    }`;
+                    btn.onclick = () => selectSparringScenario(scen);
+                    btn.innerHTML = `
+                        <div class="text-[10px] font-mono uppercase text-emerald-400">${scen.badge}</div>
+                        <div class="text-xs font-semibold mt-0.5">${scen.title}</div>
+                    `;
+                    container.appendChild(btn);
+                });
+            }
+        }
+
+        function selectLesson(lesson) {
+            currentLesson = lesson;
+            currentStepIndex = 0;
+            loadLessonIntoWorkspace();
+            renderSidebarList();
+        }
+
+        function loadLessonIntoWorkspace() {
+            const step = currentLesson.steps[currentStepIndex];
+            game.load(step.fen);
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            lastMoveSquares = [];
+
+            document.getElementById('lesson-badge').textContent = currentLesson.badge;
+            document.getElementById('lesson-category-tag').textContent = currentLesson.category;
+            document.getElementById('lesson-title').textContent = currentLesson.title;
+            document.getElementById('lesson-quote').textContent = currentLesson.quote;
+            document.getElementById('lesson-theory-text').innerHTML = currentLesson.theory;
+
+            loadCurrentStepPromptOnly();
+            setFeedback('neutral', 'Ready for Analysis', 'Inspect the board geometry and execute Capablanca\'s move.');
+            renderBoard();
+        }
+
+        function loadCurrentStepPromptOnly() {
+            const step = currentLesson.steps[currentStepIndex];
+            if (!step) return;
+            document.getElementById('lesson-prompt').textContent = step.prompt;
+            document.getElementById('step-counter-label').textContent = `Step ${currentStepIndex + 1} / ${currentLesson.steps.length}`;
+        }
+
+        function selectSparringScenario(scen) {
+            currentSparring = scen;
+            game.load(scen.fen);
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            lastMoveSquares = [];
+
+            document.getElementById('lesson-badge').textContent = scen.badge;
+            document.getElementById('lesson-category-tag').textContent = scen.category;
+            document.getElementById('lesson-title').textContent = scen.title;
+            document.getElementById('lesson-quote').textContent = scen.quote;
+            document.getElementById('lesson-theory-text').innerHTML = scen.theory;
+            document.getElementById('lesson-prompt').textContent = scen.prompt;
+            document.getElementById('step-counter-label').textContent = 'Live Sparring';
+
+            setFeedback('neutral', 'Sparring Active', 'Make any legal move on the board. The Capablanca Analyzer will grade your positional choices after every turn.');
+            renderSidebarList();
+            renderBoard();
+        }
+
+        function setFeedback(type, badgeText, message) {
+            const card = document.getElementById('feedback-card');
+            const badge = document.getElementById('feedback-status-badge');
+            const msg = document.getElementById('feedback-message');
+
+            if (type === 'success') {
+                card.className = 'bg-emerald-950/30 border border-emerald-500/40 rounded-xl p-4 transition-all';
+                badge.className = 'text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            } else if (type === 'error') {
+                card.className = 'bg-rose-950/30 border border-rose-500/40 rounded-xl p-4 transition-all';
+                badge.className = 'text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30';
+            } else if (type === 'warn') {
+                card.className = 'bg-amber-950/30 border border-amber-500/40 rounded-xl p-4 transition-all';
+                badge.className = 'text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            } else {
+                card.className = 'bg-slate-900/90 border border-slate-800 rounded-xl p-4 transition-all';
+                badge.className = 'text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300';
+            }
+
+            badge.textContent = badgeText;
+            msg.innerHTML = message;
+        }
+
+        function showStrategicHint() {
+            if (currentMode === 'curriculum') {
+                const step = currentLesson.steps[currentStepIndex];
+                if (!step) return;
+                setFeedback('warn', `Strategic Hint (${step.hintSquare.toUpperCase()})`, step.hintText);
+                // Pulse the target square on SVG overlay
+                showOverlay = true;
+                renderSVGAnnotations();
+            } else {
+                setFeedback('warn', 'Sparring Hint', 'Follow Capablanca\'s 3 priorities: (1) Centralize your King, (2) Place Rooks on open files or the 7th rank, (3) Advance your healthy pawn majority.');
+            }
+        }
+
+        function resetCurrentLesson() {
+            if (currentMode === 'curriculum') {
+                currentStepIndex = 0;
+                loadLessonIntoWorkspace();
+            } else if (currentMode === 'sparring') {
+                selectSparringScenario(currentSparring);
+            }
+        }
+
+        function prevStep() {
+            if (currentMode === 'curriculum' && currentStepIndex > 0) {
+                currentStepIndex--;
+                const step = currentLesson.steps[currentStepIndex];
+                game.load(step.fen);
+                selectedSquare = null;
+                legalMovesForSelected = [];
+                lastMoveSquares = [];
+                loadCurrentStepPromptOnly();
+                renderBoard();
+            } else if (currentMode === 'sparring') {
+                game.undo();
+                game.undo();
+                renderBoard();
+            }
+        }
+
+        function nextStepOrLesson() {
+            if (currentMode === 'curriculum') {
+                if (currentStepIndex < currentLesson.steps.length - 1) {
+                    currentStepIndex++;
+                    const step = currentLesson.steps[currentStepIndex];
+                    game.load(step.fen);
+                    selectedSquare = null;
+                    legalMovesForSelected = [];
+                    lastMoveSquares = [];
+                    loadCurrentStepPromptOnly();
+                    renderBoard();
+                } else {
+                    // Advance to next lesson in curriculum
+                    const allLessons = CURRICULUM_MODULES.flatMap(m => m.lessons);
+                    const idx = allLessons.findIndex(l => l.id === currentLesson.id);
+                    const nextLesson = allLessons[(idx + 1) % allLessons.length];
+                    selectLesson(nextLesson);
+                }
+            }
+        }
+
+        function updateMasteryProgress() {
+            const total = CURRICULUM_MODULES.flatMap(m => m.lessons).length;
+            const done = completedLessons.size;
+            const pct = Math.round((done / total) * 100);
+            document.getElementById('progress-text').textContent = `${done} / ${total} Modules Completed`;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const tabs = ['curriculum', 'sparring', 'codex'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (t === mode) {
+                    el.className = 'px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all bg-amber-500 text-slate-950 font-semibold shadow';
+                } else {
+                    el.className = 'px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-slate-200';
+                }
+            });
+
+            const boardView = document.getElementById('workspace-board-view');
+            const codexView = document.getElementById('workspace-codex-view');
+            const currHeader = document.getElementById('sidebar-curriculum-header');
+            const sparHeader = document.getElementById('sidebar-sparring-header');
+
+            if (mode === 'codex') {
+                boardView.classList.add('hidden');
+                codexView.classList.remove('hidden');
+            } else {
+                boardView.classList.remove('hidden');
+                codexView.classList.add('hidden');
+                if (mode === 'curriculum') {
+                    currHeader.classList.remove('hidden');
+                    sparHeader.classList.add('hidden');
+                    selectLesson(currentLesson);
+                } else {
+                    currHeader.classList.add('hidden');
+                    sparHeader.classList.remove('hidden');
+                    selectSparringScenario(currentSparring);
+                }
+            }
+        }
+
+        // Initialize Application on Load
+        window.onload = function () {
+            renderSidebarList();
+            loadLessonIntoWorkspace();
+            updateMasteryProgress();
+        };
+    </script>
 </body>
 </html>
