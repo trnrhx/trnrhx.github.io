@@ -142,11 +142,12 @@
         <p>AI trainer and builder (independent contractor), found at the intersection of engineering, design, tech and humanity. This site is an interactive terminal: type help, about, projects or contact.</p>
         <h3>Projects</h3>
         <ul>
-            <li><a href="/projects/ai_stack.html" tabindex="-1">AI_STACK</a>: self-hosted AI automation and workflow stack integrating n8n, Dify, PostgreSQL, NocoDB, Ollama, OpenClaw, Docling, SeaweedFS and Caddy.</li>
+            <li><a href="https://github.com/trnrhx/skills" tabindex="-1">SKILLS</a>: Modular library of specialized AI agent skills and behavioral specifications for large language models (LLMs) and autonomous agents.</li>
             <li><a href="/projects/iris_agent.html" tabindex="-1">IRIS_AGENT</a>: AI agent specializing in system maintenance, automation and self-improvement.</li>
-            <li><a href="/projects/apollo_agent.html" tabindex="-1">APOLLO_AGENT</a>: portable, hardware-based AI agent with advanced TTS/STT capabilities.</li>
-            <li><a href="/projects/glowing_horizon.html" tabindex="-1">GLOWING_HORIZON</a>: real-time, web-based map visualization of worldwide data streams.</li>
-            <li><a href="/projects/neon_hacker/index.html" tabindex="-1">NEON_HACKER</a>: browser-based retro FPS with a cyberpunk horror theme.</li>
+            <li><a href="/projects/ai_stack.html" tabindex="-1">AI_STACK</a>: Self-hosted AI automation and workflow stack integrating n8n, Dify, PostgreSQL, NocoDB, Ollama, OpenClaw, Docling, SeaweedFS and Caddy.</li>
+            <li><a href="/chess.html" tabindex="-1">CHESS</a>: Chess tutor and training system based on Capablanca's instructional method and positional principles.</li>
+            <li><a href="/projects/glowing_horizon.html" tabindex="-1">GLOWING_HORIZON</a>: Real-time, web-based map visualization of worldwide data streams.</li>
+            <li><a href="/neon_hacker.html" tabindex="-1">NEON_HACKER</a>: Browser-based retro FPS with a cyberpunk horror theme.</li>
         </ul>
         <h3>Contact</h3>
         <ul>
@@ -334,26 +335,27 @@ AVAILABLE COMMANDS:
 LOADING PROJECT DATABASE...
 ---------------------------
 @pause 450
-1. <a class="text-white" href="/projects/ai_stack.html" target="_blank" rel="noopener">AI_STACK</a>   [ AI Research & Development]
+1. <a class="text-white" href="https://github.com/trnrhx/skills" target="_blank" rel="noopener">SKILLS</a>   [ AI Research & Development]
+   > Modular library of specialized AI agent skills and behavioral specifications for large language models (LLMs) and autonomous agents. 
+   > Free, open source, and usable on all major AI platforms.
+   > Status: OPERATIONAL
+
+2. <a class="text-white" href="/projects/ai_stack.html" target="_blank" rel="noopener">AI_STACK</a>   [ AI Research & Development]
    > Self hosted AI automation and workflow stack integrating n8n, Dify, PostgreSQL, NocoDB, Ollama, OpenClaw, Docling, SeaweedFS, and Caddy. 
    > Managed by iris_agent. 
    > Status: TESTING
 
-2. <a class="text-white" href="/projects/iris_agent.html" target="_blank" rel="noopener">IRIS_AGENT</a>   [ AI Agent ]
+3. <a class="text-white" href="/projects/iris_agent.html" target="_blank" rel="noopener">IRIS_AGENT</a>   [ AI Agent ]
    > AI Agent specializing in system maintenance, automation, and self-improvement. 
    > Oversees AI-stack operations and optimizes workflows.
    > Status: OPERATIONAL
 
-3. <a class="text-white" href="/projects/apollo_agent.html" target="_blank" rel="noopener">APOLLO_AGENT</a>   [ AI Agent ]
-   > Portable, hardware based AI agent with advanced TTS/STT capabilities.
-   > Status: PLANNING
-
-4. <a class="text-white" href="/projects/glowing_horizon.html" target="_blank" rel="noopener">GLOWING_HORIZON</a>   [ Total Global Situational Awareness ]
-   > Real time, web-based map visualization of worldwide data streams
-   > Status: DEVELOPMENT
-
-5. <a class="text-white" href="/projects/neon_hacker/index.html" target="_blank" rel="noopener">NEON_HACKER</a>   [ 3D Web Game ]
+4. <a class="text-white" href="/neon_hacker.html" target="_blank" rel="noopener">NEON_HACKER</a>   [ 3D Web Game ]
    > Browser-based retro FPS with cyberpunk horror theme
+   > Status: PROTOTYPE
+
+5. <a class="text-white" href="/chess.html" target="_blank" rel="noopener">CHESS</a>   [ 3D Web Game ]
+   > Chess tutor and training system based on Capablanca's instructional method and positional principles.
    > Status: PROTOTYPE
 
 `);
@@ -489,7 +491,9 @@ LOADING PROJECT DATABASE...
             'iris_agent': '/projects/iris_agent.html',
             'apollo_agent': '/projects/apollo_agent.html',
             'glowing_horizon': '/projects/glowing_horizon.html',
-            'neon_hacker': '/projects/neon_hacker/index.html',
+            'neon_hacker': '/neon_hacker.html',
+            'skills': 'https://github.com/trnrhx/skills',
+            'chess': '/chess.html',
         };
 
         async function execCmd(cmdString) {
