@@ -1,0 +1,4 @@
+_site/
+blog-src/public/
+blog-src/resources/
+.hugo_build.lock

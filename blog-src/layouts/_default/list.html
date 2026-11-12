@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default "en-us" }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .Title }} | {{ .Site.Title }}</title>
+  <!-- Replace or extend with your root stylesheet later, e.g. /style.css -->
+  <link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <nav>
+        <a href="/">trnrhx.com</a>
+        <span>/</span>
+        <a href="{{ .Site.Home.RelPermalink }}">blog</a>
+      </nav>
+      <h1>{{ .Title }}</h1>
+    </header>
+    <main>
+      <ul class="post-list">
+        {{ range .Pages.ByDate.Reverse }}
+          <li>
+            <a class="post-title" href="{{ .RelPermalink }}">{{ .Title }}</a>
+            <div class="meta">
+              <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
+            </div>
+            {{ with .Description }}
+              <p class="post-description">{{ . }}</p>
+            {{ end }}
+          </li>
+        {{ end }}
+      </ul>
+    </main>
+  </div>
+</body>
+</html>
