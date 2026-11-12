@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html lang="{{ .Site.LanguageCode | default "en-us" }}">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ .Title }} | {{ .Site.Title }}</title>
-  {{ with .Description }}<meta name="description" content="{{ . }}">{{ end }}
-  <!-- Replace or extend with your root stylesheet later, e.g. /style.css -->
-  <link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ .Title }} — trnrhx</title>
+  <link rel="stylesheet" href="{{ "blog.css" | relURL }}">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <nav>
+  <main class="container">
+    <header class="site-header">
+      <a class="site-title" href="{{ "/" | relURL }}">Writing</a>
+      <nav class="site-nav">
         <a href="/">trnrhx.com</a>
-        <span>/</span>
-        <a href="{{ .Site.Home.RelPermalink }}">&larr; Back to blog</a>
       </nav>
-      <h1>{{ .Title }}</h1>
-      <div class="meta">
-        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
-      </div>
     </header>
-    <main>
-      <article>
+    <article>
+      <header class="post-header">
+        <h1 class="post-title">{{ .Title }}</h1>
+        <div class="post-meta">{{ .Date.Format "January 2, 2006" }} · {{ .ReadingTime }} min read</div>
+      </header>
+      <div class="prose">
         {{ .Content }}
-      </article>
-    </main>
-  </div>
+      </div>
+      <footer class="post-footer">
+        <a href="{{ "/" | relURL }}">← All posts</a>
+      </footer>
+    </article>
+  </main>
 </body>
 </html>

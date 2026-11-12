@@ -1,37 +1,30 @@
 <!DOCTYPE html>
-<html lang="{{ .Site.LanguageCode | default "en-us" }}">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ .Title }} | {{ .Site.Title }}</title>
-  <!-- Replace or extend with your root stylesheet later, e.g. /style.css -->
-  <link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ if .IsHome }}Writing — trnrhx{{ else }}{{ .Title }} — trnrhx{{ end }}</title>
+  <link rel="stylesheet" href="{{ "blog.css" | relURL }}">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <nav>
+  <main class="container">
+    <header class="site-header">
+      <a class="site-title" href="{{ "/" | relURL }}">Writing</a>
+      <nav class="site-nav">
         <a href="/">trnrhx.com</a>
-        <span>/</span>
-        <a href="{{ .Site.Home.RelPermalink }}">blog</a>
       </nav>
-      <h1>{{ .Title }}</h1>
     </header>
-    <main>
-      <ul class="post-list">
-        {{ range .Pages.ByDate.Reverse }}
-          <li>
-            <a class="post-title" href="{{ .RelPermalink }}">{{ .Title }}</a>
-            <div class="meta">
-              <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
-            </div>
-            {{ with .Description }}
-              <p class="post-description">{{ . }}</p>
-            {{ end }}
-          </li>
-        {{ end }}
-      </ul>
-    </main>
-  </div>
+    <ul class="post-list">
+      {{ range .Site.RegularPages.ByDate.Reverse }}
+      <li class="post-row">
+        <a href="{{ .RelPermalink }}">
+          <span class="post-row-title">{{ .Title }}</span>
+          <time class="post-row-date">{{ .Date.Format "Jan 02, 2006" }}</time>
+        </a>
+        {{ with .Description }}<p class="post-row-desc">{{ . }}</p>{{ end }}
+      </li>
+      {{ end }}
+    </ul>
+  </main>
 </body>
 </html>
