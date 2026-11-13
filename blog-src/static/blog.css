@@ -252,3 +252,39 @@ body {
     gap: 0.2rem;
   }
 }
+/* 1. Prevent flex/grid children from blowing out the 680px reading column */
+main,
+article,
+.post-content {
+min-width: 0;
+max-width: 100%;
+overflow-x: hidden;
+box-sizing: border-box;
+}
+
+/* 2. Constrain all standard Markdown images and high-DPI charts to the column width */
+article img,
+.post-content img,
+main img,
+figure img {
+max-width: 100%;
+width: auto;
+height: auto;
+display: block;
+margin: 1.75rem auto 0.5rem auto;
+box-sizing: border-box;
+}
+
+/* 3. Clean editorial styling for the automatic Goldmark figure render hook */
+figure.post-figure {
+max-width: 100%;
+margin: 2rem 0;
+padding: 0;
+}
+
+figure.post-figure figcaption {
+font-size: 0.85rem;
+line-height: 1.45;
+opacity: 0.75;
+margin-top: 0.5rem;
+}
