@@ -1,5 +1,5 @@
 ---
-title: "Part 1"
+title: "Post-Threshold Part 1: Synthetic RL"
 date: 2026-11-12
 description: "Inside the Anthropic audit: how automated reinforcement learning triggered a self-improvement loop."
 draft: false
