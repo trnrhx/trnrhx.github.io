@@ -1,5 +1,5 @@
 ---
-title: "Part 2"
+title: "Post-Threshold Part 2: Soft Nationalization"
 date: 2026-11-12
 description: "Born secret: why frontier AI is splitting into a commercial utility and a classified national asset"
 draft: false
