@@ -20,6 +20,7 @@
             --color-primary: #0f0;
             --color-bg: #0a0a0a;
             --color-dim: #003300;
+            --color-track: #001100;
         }
 
         body {
@@ -33,16 +34,43 @@
             font-size: 1.25rem;
         }
 
+        .theme-border {
+            border-color: var(--color-dim);
+        }
+
+        .theme-prompt {
+            color: var(--color-primary);
+        }
+
+        .theme-highlight {
+            background-color: var(--color-dim);
+        }
+
+        .cmd-trigger {
+            cursor: pointer;
+            touch-action: manipulation;
+            text-decoration: underline;
+            text-decoration-color: var(--color-dim);
+            text-underline-offset: 3px;
+        }
+
+        .cmd-trigger:hover,
+        .cmd-trigger:focus-visible {
+            text-decoration-color: currentColor;
+            background-color: var(--color-dim);
+            outline: none;
+        }
+
         /* Terminal Scrollbar */
         #terminal-output::-webkit-scrollbar {
             width: 10px;
         }
         #terminal-output::-webkit-scrollbar-track {
-            background: #001100;
+            background: var(--color-track);
         }
         #terminal-output::-webkit-scrollbar-thumb {
             background: var(--color-primary);
-            border: 2px solid #001100;
+            border: 2px solid var(--color-track);
         }
 
         /* Input Styling */
@@ -161,7 +189,7 @@
     <div class="relative z-10 h-full p-4 md:p-8 flex flex-col w-full">
         
         <!-- Header -->
-        <header class="border-b-2 border-green-900 pb-2 mb-4 flex justify-between items-end select-none">
+        <header class="border-b-2 theme-border pb-2 mb-4 flex justify-between items-end select-none">
             <div>
                 <h1 class="text-4xl md:text-5xl font-bold leading-none glitch" data-text="TRNRHX_SYSTEMS">TRNRHX_SYSTEMS</h1>
                 <div class="text-sm opacity-70">v2.4.0 [UNSECURED CONNECTION]</div>
@@ -176,22 +204,12 @@
         <div id="terminal-output" role="log" aria-live="polite" aria-label="Terminal output" class="flex-grow overflow-y-auto mb-4 font-bold whitespace-pre-wrap leading-relaxed"></div>
 
         <!-- Input Line -->
-        <div class="flex items-center bg-black bg-opacity-80 p-2 border border-green-900 rounded">
-            <span class="mr-2 text-green-400">root@trnrhx:~$</span>
+        <div class="flex items-center bg-black bg-opacity-80 p-2 border theme-border rounded">
+            <span class="mr-2 theme-prompt">root@trnrhx:~$</span>
             <div class="relative flex-grow">
                 <input type="text" id="command-input" class="cmd-input" aria-label="Terminal command" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
                 <span id="cursor-visual" class="cursor absolute top-1 left-0"></span>
             </div>
-        </div>
-        
-        <!-- Quick command buttons (mobile only) -->
-        <div class="md:hidden mt-2 flex gap-2 overflow-x-auto pb-2 text-sm">
-            <button onclick="runCmd('help')" class="border border-green-800 px-3 py-1 hover:bg-green-900">HELP</button>
-            <button onclick="runCmd('projects')" class="border border-green-800 px-3 py-1 hover:bg-green-900">PROJECTS</button>
-            <button onclick="runCmd('blog')" class="border border-green-800 px-3 py-1 hover:bg-green-900">BLOG</button>
-            <button onclick="runCmd('about')" class="border border-green-800 px-3 py-1 hover:bg-green-900">ABOUT</button>
-            <button onclick="runCmd('contact')" class="border border-green-800 px-3 py-1 hover:bg-green-900">CONTACT</button>
-            <button onclick="runCmd('clear')" class="border border-green-800 px-3 py-1 hover:bg-green-900">CLS</button>
         </div>
     </div>
 
@@ -243,6 +261,16 @@
             return enqueue(() => execCmd(cmdString));
         }
 
+        function submitCmd(cmdString) {
+            if (!cmdString) return;
+            history.push(cmdString);
+            historyIndex = history.length;
+            return runCmd(cmdString);
+        }
+
+        const cmdTag = (cmd, label = cmd, extraClass = '') =>
+            `<span role="button" tabindex="0" data-cmd="${esc(cmd)}" class="cmd-trigger ${extraClass}">${esc(label)}</span>`;
+
         // Prints text one line at a time into a single block. A line reading "@pause 450" waits 450 ms.
         async function streamOutput(text, className = '') {
             const div = document.createElement('div');
@@ -281,21 +309,28 @@ SIGNAL: [ENCRYPTED]`,
             'secrets.dat': `ACCESS DENIED. ENCRYPTION LEVEL 5 REQUIRED.`
         };
 
+        const themePalette = {
+            green: { primary: '#0f0', dim: '#003300', track: '#001100' },
+            amber: { primary: '#ffb000', dim: '#4d3300', track: '#1a1100' },
+            cyan:  { primary: '#00ffff', dim: '#004040', track: '#001414' },
+            red:   { primary: '#ff0000', dim: '#4d0000', track: '#1a0000' }
+        };
+
         const commands = {
             'help': {
                 desc: 'List available commands',
                 action: () => streamOutput(`
 AVAILABLE COMMANDS:
-  <span class="text-white">help</span>      - Display this menu
-  <span class="text-white">about</span>     - Display operator identity
-  <span class="text-white">projects</span>  - List ongoing operations
-  <span class="text-white">blog</span>      - Open personal blog
-  <span class="text-white">contact</span>   - Transmission channels
-  <span class="text-white">clear</span>     - Clear terminal buffer
-  <span class="text-white">cat</span>       - Print file content to standard output
-  <span class="text-white">ls</span>        - List directory contents
-  <span class="text-white">theme</span>     - Change system color (green/amber/cyan/red)
-  <span class="text-white">hack</span>      - [WARNING] Initiate brute force
+  ${cmdTag('help', 'help', 'text-white')}      - Display this menu
+  ${cmdTag('about', 'about', 'text-white')}     - Display operator identity
+  ${cmdTag('projects', 'projects', 'text-white')}  - List ongoing operations
+  ${cmdTag('blog', 'blog', 'text-white')}      - Open personal blog
+  ${cmdTag('contact', 'contact', 'text-white')}   - Transmission channels
+  ${cmdTag('clear', 'clear', 'text-white')}     - Clear terminal buffer
+  ${cmdTag('cat', 'cat', 'text-white')}       - Print file content to standard output
+  ${cmdTag('ls', 'ls', 'text-white')}        - List directory contents
+  ${cmdTag('theme', 'theme', 'text-white')}     - Change system color (${Object.keys(themePalette).map((t) => cmdTag(`theme ${t}`, t)).join('/')})
+  ${cmdTag('hack', 'hack', 'text-white')}      - [WARNING] Initiate brute force
 `)
             },
             'about': {
@@ -312,7 +347,9 @@ AVAILABLE COMMANDS:
             },
             'ls': {
                 desc: 'List files',
-                action: () => printOutput(Object.keys(fileSystem).join('  ') + '  <span class="text-blue-400">system/</span>')
+                action: () => printOutput(
+                    Object.keys(fileSystem).map((f) => cmdTag(`cat ${f}`, f)).join('  ') + '  <span class="text-blue-400">system/</span>'
+                )
             },
             'cat': {
                 desc: 'Read file',
@@ -369,13 +406,17 @@ LOADING PROJECT DATABASE...
             'theme': {
                 desc: 'Change color theme',
                 action: (args) => {
+                    const name = (args || '').toLowerCase();
+                    if (!has(themePalette, name)) {
+                        const opts = Object.keys(themePalette).map((t) => cmdTag(`theme ${t}`, t)).join('|');
+                        return printOutput(`Usage: theme [${opts}]`);
+                    }
                     const root = document.documentElement;
-                    if (args === 'amber') root.style.setProperty('--color-primary', '#ffb000');
-                    else if (args === 'cyan') root.style.setProperty('--color-primary', '#00ffff');
-                    else if (args === 'red') root.style.setProperty('--color-primary', '#ff0000');
-                    else if (args === 'green') root.style.setProperty('--color-primary', '#0f0');
-                    else return printOutput("Usage: theme [green|amber|cyan|red]");
-                    printOutput(`System theme updated to ${args || 'green'}.`);
+                    const palette = themePalette[name];
+                    root.style.setProperty('--color-primary', palette.primary);
+                    root.style.setProperty('--color-dim', palette.dim);
+                    root.style.setProperty('--color-track', palette.track);
+                    printOutput(`System theme updated to ${name}.`);
                 }
             },
             'neofetch': {
@@ -515,7 +556,7 @@ LOADING PROJECT DATABASE...
 
             // Intercept hidden project commands
             if (has(projectRoutes, cmd)) {
-                printOutput(`Initiating secure connection to ${cmd}...`, "text-green-500");
+                printOutput(`Initiating secure connection to ${cmd}...`, "theme-prompt");
                 window.open(projectRoutes[cmd], '_blank');
                 return;
             }
@@ -523,7 +564,7 @@ LOADING PROJECT DATABASE...
             if (has(commands, cmd)) {
                 await commands[cmd].action(args);
             } else {
-                printOutput(`Command not found: ${esc(cmd)}. Type 'help' for list.`, "text-red-500");
+                printOutput(`Command not found: ${esc(cmd)}. Type '${cmdTag('help', 'help', 'text-white')}' for list.`, "text-red-500");
             }
         }
 
@@ -532,9 +573,7 @@ LOADING PROJECT DATABASE...
             if (e.key === 'Enter') {
                 const cmd = this.value;
                 if (cmd) {
-                    history.push(cmd);
-                    historyIndex = history.length;
-                    runCmd(cmd);
+                    submitCmd(cmd);
                 } else if (pending) {
                     skipping = true; // empty Enter skips the animation
                 }
@@ -587,20 +626,32 @@ LOADING PROJECT DATABASE...
                 }
                 await sleep(500);
                 printOutput("<br>Welcome to TRNRHX Terminal.", "text-xl text-white font-bold");
-                printOutput("Type <span class='text-white bg-green-900 px-1'>help</span> to see available commands.<br>");
+                printOutput(`Type ${cmdTag('help', 'help', 'text-white theme-highlight px-1')} to see available commands.<br>`);
             });
         };
 
-        // Keep focus on the prompt (desktop only, so phones don't get a surprise keyboard)
+        // Run clickable commands and keep focus on the prompt (desktop only, so phones don't get a surprise keyboard)
         document.addEventListener('click', (e) => {
             const finePointer = mq('(pointer: fine)');
-            if (e.target.closest('a')) return;            // let links behave normally
-            if (e.target.closest('button')) {             // quick-command buttons
+            const cmdEl = e.target.closest('[data-cmd]');
+            if (cmdEl) {
+                if (window.getSelection().toString()) return;
+                submitCmd(cmdEl.getAttribute('data-cmd'));
                 if (finePointer) input.focus();
                 return;
             }
+            if (e.target.closest('a')) return;            // let links behave normally
             if (window.getSelection().toString()) return; // don't break text selection / copying
             if (finePointer) input.focus();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const cmdEl = e.target.closest('[data-cmd]');
+            if (!cmdEl) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                cmdEl.click();
+            }
         });
     </script>
 </body>
