@@ -1,11 +1,11 @@
 ---
-title: "Part 1: Inside the Anthropic audit"
+title: "Part 1"
 date: 2026-11-12
-description: "How automated reinforcement learning triggered a self-improvement loop."
+description: "Inside the Anthropic audit: how automated reinforcement learning triggered a self-improvement loop."
 draft: false
 ---
 
-# Part 1: Inside the Anthropic audit: how automated reinforcement learning triggered a self-improvement loop
+# Inside the Anthropic audit: how automated reinforcement learning triggered a self-improvement loop
 
 On November 5, 2026, the independent evaluation group METR published an eleven-week audit titled *Independent Assessment of AI R&D Acceleration at Anthropic*. Anthropic blacked out several passages before release, but the core numbers stayed in. After October 2025, Anthropic's internal AI models improved on software engineering and research benchmarks at 1.9x the pace recorded between March 2024 and October 2025. When METR adjusted its statistical model with heavy-tailed Cauchit and Log-Log link functions (formulas that account for top models bunching up near the 100 percent ceiling on older tests), the estimated acceleration rose to between 2.6x and 2.9x.
 
