@@ -188,6 +188,7 @@
         <div class="md:hidden mt-2 flex gap-2 overflow-x-auto pb-2 text-sm">
             <button onclick="runCmd('help')" class="border border-green-800 px-3 py-1 hover:bg-green-900">HELP</button>
             <button onclick="runCmd('projects')" class="border border-green-800 px-3 py-1 hover:bg-green-900">PROJECTS</button>
+            <button onclick="runCmd('projects')" class="border border-green-800 px-3 py-1 hover:bg-green-900">BLOG</button>
             <button onclick="runCmd('about')" class="border border-green-800 px-3 py-1 hover:bg-green-900">ABOUT</button>
             <button onclick="runCmd('contact')" class="border border-green-800 px-3 py-1 hover:bg-green-900">CONTACT</button>
             <button onclick="runCmd('clear')" class="border border-green-800 px-3 py-1 hover:bg-green-900">CLS</button>
@@ -288,6 +289,7 @@ AVAILABLE COMMANDS:
   <span class="text-white">help</span>      - Display this menu
   <span class="text-white">about</span>     - Display operator identity
   <span class="text-white">projects</span>  - List ongoing operations
+  <span class="text-white">projects</span>  - Open personal blog
   <span class="text-white">contact</span>   - Transmission channels
   <span class="text-white">clear</span>     - Clear terminal buffer
   <span class="text-white">cat</span>       - Print file content to standard output
@@ -327,6 +329,10 @@ AVAILABLE COMMANDS:
             'cls': {
                 desc: 'Clear screen',
                 action: () => output.innerHTML = ''
+            },
+            'blog': {
+                desc: 'Open Blog',
+                action: () => window.open('https://trnrhx.com/blog/', '_blank', 'noopener,noreferrer')
             },
             'projects': {
                 desc: 'List projects',
@@ -493,6 +499,7 @@ LOADING PROJECT DATABASE...
             'neon_hacker': '/neon_hacker.html',
             'skills': 'https://github.com/trnrhx/skills',
             'chess': '/chess.html',
+            'blog': '/blog.html',
         };
 
         async function execCmd(cmdString) {
