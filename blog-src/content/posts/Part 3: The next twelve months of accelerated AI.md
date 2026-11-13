@@ -1,5 +1,5 @@
 ---
-title: "Part 3"
+title: "Post-Threshold Part 3: The Physical Tollbooths"
 date: 2026-11-12
 description: "The next twelve months of accelerated AI, and how regular people can position themselves."
 draft: false
