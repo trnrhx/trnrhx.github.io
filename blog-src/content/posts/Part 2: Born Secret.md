@@ -1,11 +1,11 @@
 ---
-title: "Part 2: Born Secret"
+title: "Part 2"
 date: 2026-11-12
-description: "Super Intelligence and why frontier AI is splitting into a commercial utility and a classified national asset"
+description: "Born secret: why frontier AI is splitting into a commercial utility and a classified national asset"
 draft: false
 ---
 
-# Part 2: Born secret: why frontier AI is splitting into a commercial utility and a classified national asset
+# Born secret: why frontier AI is splitting into a commercial utility and a classified national asset
 
 A telling detail sits inside the benchmark tables of the November 2026 METR audit of Anthropic. Between July and October 2026, Anthropic trained three successive frontier checkpoints, listed in the report as Model 2, Model 3, and Model 4. Each one outperformed the public Claude models available to paying customers, and Anthropic released none of them. In the methodology appendix, the auditors noted that Anthropic has begun holding onto its newest models longer before releasing them.
 
@@ -14,6 +14,8 @@ For the past four years, the business model of every major AI lab was straightfo
 Once a lab's internal models cross the threshold into automated research and development, selling public access to the smartest model becomes a losing strategy. Over the past two months, corporate economic incentives and United States national security policy have converged to split artificial intelligence into two permanent tiers: a commercial software utility for businesses and consumers, and an air-gapped, federally supervised "Super Intelligence" tier that operates like a classified defense program.
 
 ### Why selling the frontier model as a public subscription breaks down
+
+![Anthropic telemetry showing agent hours per human work-hour reaching 6x across all employees and 19x inside research organizations by August 2026](https://assets.claude.com/042b829f8c8850b596dfb6feaa323d1e911b21bb.png)
 
 When an AI lab has a self-improvement loop running inside its data center, releasing the newest checkpoint to the public creates two immediate problems.
 
