@@ -1,0 +1,5 @@
+<div class="hugo-timeline-item">
+  <span class="hugo-timeline-time">{{ .Get "time" }}</span>
+  <h3 class="hugo-timeline-title">{{ .Get "title" }}</h3>
+  <div class="hugo-timeline-body">{{ .Inner | markdownify }}</div>
+</div>
