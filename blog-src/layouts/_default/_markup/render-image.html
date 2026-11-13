@@ -1,0 +1,8 @@
+<figure class="post-figure">
+  <img src="{{ .Destination | safeURL }}" alt="{{ .Text }}" loading="lazy" decoding="async" />
+  {{- if .Title -}}
+  <figcaption>{{ .Title }}</figcaption>
+  {{- else if .Text -}}
+  <figcaption>{{ .Text }}</figcaption>
+  {{- end -}}
+</figure>
