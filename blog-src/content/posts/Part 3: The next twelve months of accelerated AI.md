@@ -1,11 +1,11 @@
 ---
-title: "Part 3: The next twelve months of accelerated AI"
+title: "Part 3"
 date: 2026-11-12
-description: "What is going to happen and how regular people can position themselves."
+description: "The next twelve months of accelerated AI, and how regular people can position themselves."
 draft: false
 ---
 
-# Part 3: The next twelve months of accelerated AI, and how regular people can position themselves
+# The next twelve months of accelerated AI, and how regular people can position themselves
 
 At the end of its November 5, 2026 audit of Anthropic, the evaluation group METR addressed the question that matters most for anyone planning more than six months ahead: what is going to slow this down? After reviewing Anthropic's internal data, METR stated that it found no evidence of significant bottlenecks in algorithms, training compute, experiment compute, or data that would prevent further capability progress over the next twelve months.
 
@@ -14,6 +14,8 @@ Yesterday, on November 11, 2026, researchers at the AI Futures Project plugged M
 Combining the automated reinforcement learning loop from Part 1 with the split between commercial software and classified frontier models from Part 2 maps out the trajectory between November 2026 and November 2027. Tracing where this digital speedup hits physical and legal bottlenecks shows where regular people can position their careers and capital.
 
 ### What happens between November 2026 and November 2027
+
+![Anthropic R&D Automation Trajectory showing the share of model R&D tasks shifting to AL4 AI leads and AL5 Fully automated across 2026 and 2027](https://substackcdn.com/image/fetch/$s_!sFvS!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F26315143-62b0-4880-a80e-a7eea616a681_1200x722.jpeg)
 
 Labs will close the outer research loop and saturate every standard benchmark by spring 2027. Right now, human engineers at Anthropic still read the results of their automated `[agent-scaffold]` experiments and type in the next batch of ideas. With `Model 4` already speeding up experiment execution by up to 12x, the human researcher reading charts is now the slowest piece of the machinery. Over the next three to four months, labs will hand that outer step to the models as well, letting `Model 4` and `Model 5` read the overnight training logs and automatically queue the next round of experiments. As the 30-day checkpoint cycle continues, standard coding, math, and science benchmarks will saturate past 90 percent accuracy by mid-2027. To stop models from gaming their own automated tests, labs will anchor their training loops in strict mathematical proof checkers (such as the programming language Lean 4), hardware speed tests where models rewrite computer chip software, and live cybersecurity sandboxes.
 
@@ -25,6 +27,8 @@ Finally, the late-November 2026 legal definition of "Super Intelligence" will lo
 
 ### Why buying Big Tech stocks is an overcrowded, flawed bet
 
+![Big Tech Capital Expenditures in billions of USD from 2019 to 2027 estimates showing spending reaching 2.2 percent of US GDP](https://www.carsongroup.com/wp-content/uploads/2026/02/blog-2026-02-hyperscalar-capex-scaled.png)
+
 When people hear that AI capability growth has doubled, their first instinct is to buy stock in Nvidia, Microsoft, Google, or wait for Anthropic's upcoming public offering. That trade is already priced in by every institutional desk on Wall Street, and it carries two major risks.
 
 According to S&P Global projections, the six largest cloud hyperscalers are on track to spend more than $1.3 trillion on AI data centers and hardware by 2027, a capital spending binge so large that several of them are projected to run negative free operating cash flow while buying chips that depreciate in three years.
@@ -32,6 +36,8 @@ According to S&P Global projections, the six largest cloud hyperscalers are on t
 Furthermore, if the federal government fences off the most powerful internal models under national security rules while cheap open-source and distilled models turn everyday business AI into a low-margin utility, public equity shareholders may end up funding a trillion-dollar infrastructure buildout while the sovereign state and specialized patent partners capture the richest upside.
 
 ### How to position your career and business: own the verification and physical choke points
+
+![Anthropic workforce data showing junior technical hires falling from 27 percent in early 2025 to 9 percent in 2026](https://i0.wp.com/www.saastr.com/wp-content/uploads/2026/10/c889b669a2e69b947063ce5196adcc782037bccefe0fa0be91526846c0ed9819.jpg?fit=750%2C582&quality=70&ssl=1)
 
 On October 16, 2026, Anthropic's internal economics team published a study examining how work inside their own company had changed now that active AI agent hours outnumber human employee hours 6 to 1. Their findings preview how technical and professional work will reorganize over the next twelve months. Demand for junior implementation roles (people hired simply to write routine code or draft first-pass documents) dropped sharply. At the same time, the scarcest resource inside the building became human verification and judgment. Staff reported spending up to half their work week auditing, grading, and verifying the flood of work produced by their AI agents.
 
