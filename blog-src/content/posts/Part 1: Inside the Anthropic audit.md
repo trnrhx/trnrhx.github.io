@@ -11,6 +11,8 @@ On November 5, 2026, the independent evaluation group METR published an eleven-w
 
 At that rate, two to three years of historical AI progress happens inside twelve months. METR attributed roughly 80 percent of the speedup to Anthropic using its own models to run the research that builds the next generation. Matching the anonymized staff interviews against the blacked-out sections shows the mechanism: Anthropic's unreleased models crossed a threshold in coding reliability that let the company automate the construction and execution of reinforcement learning environments.
 
+![METR AECI capability chart showing 1.9x acceleration after October 2025 and rapid internal checkpoints from Mythos Preview to Model 4](https://metr.org/assets/images/ai-rd-acceleration-assessment/aeci-main.png)
+
 ### Pretraining compute vs. post-training experiments
 
 Building a frontier AI model happens in two stages: pretraining and reinforcement learning.
@@ -56,6 +58,8 @@ In computer science, Recursive Self-Improvement (RSI) describes the threshold wh
 The training completion dates in METR's methodology appendix show how tight that feedback loop has become. Training a major frontier model from scratch normally takes four to six months. After Anthropic deployed `mythos-preview` with `[agent-scaffold]`, the company finished training three successive internal frontier models in roughly sixteen weeks. `Model 2` finished training in July 2026, delivering another large jump in practical usefulness inside `[agent-scaffold]` over `mythos-preview`. `Model 3` finished between August and September 2026, and `Model 4` finished between September and October 2026.
 
 No lab trains three separate giant base models from scratch in four months. `Models 2, 3, and 4` are sequential reinforcement learning and post-training checkpoints branched off an existing base model. As soon as `Model 2` finished in July, Anthropic plugged it back into `[agent-scaffold]` to run faster experiments and generate harder synthetic training tasks to build `Model 3` in August, which was immediately used to help produce `Model 4` in October. By the time `Model 4` finished, staff reported speedups of up to 12x on specific research workflows, and `Model 4` scored above 50 percent across all fifteen benchmarks in Anthropic's internal evaluation suite.
+
+![Informal self-reported R&D uplift over time from Anthropic employees showing exponential and superexponential fits up to 12x on Model 4](https://the-decoder.com/wp-content/uploads/2026/11/METR-November26-self-reported-uplift.png)
 
 When each new model checkpoint directly multiplies the number of experiments and training tasks used to build the next checkpoint thirty days later, the feedback loop is closed. A human engineer still spends ten minutes reviewing summary charts and typing a three-sentence prompt between iterations, which adds a small delay without changing the underlying feedback loop.
 
