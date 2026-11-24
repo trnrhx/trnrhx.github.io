@@ -1,13 +1,8 @@
 ---
 title: "The Question Is the New Answer"
 date: 2026-11-24
-draft: false
 description: "When AI drives the cost of answers and predictions toward zero, the bottleneck shifts to problem framing, judgment, verification, and uninterrupted focus."
-tags:
-  - ai
-  - judgment
-  - work
-  - thinking
+draft: false
 ---
 
 For decades, schools and employers rewarded people for acting like reliable machines. Memorizing facts, executing routine procedures quickly, and avoiding friction were the clearest paths to advancement. Now actual machines perform that work faster and at near-zero marginal cost. When answers become free and abundant, the bottleneck in knowledge work shifts away from recall and execution toward the quality of the question.
